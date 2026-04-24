@@ -1,0 +1,37 @@
+# Generated briefings / outputs - never commit these
+briefings/
+docs/breakdowns/
+docs/specs/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Claude Code local config (per-user, don't commit)
+.claude/settings.local.json
+.claude/settings.json
