@@ -15,6 +15,8 @@ Built by a PM who got tired of doing the same Jira-shaped rituals by hand, autom
 - **[initiative-breakdown](skills/initiative-breakdown/)** -- multi-agent orchestration (4 specialized agents + approval gates) that turns a Jira initiative or a PRD into validated epics and stories. Configurable per team via `config.yml`. Replaces 2-4 hours of manual breakdown with ~15 minutes + your review.
 - **[product-spec](skills/product-spec/)** -- interactive PRD generator.
 - **[product-analytics](skills/product-analytics/)** -- GA4 / Firebase / PostHog analysis with adoption / engagement / conversion framework.
+- **[codebase-research](skills/codebase-research/)** -- multi-platform codebase audit. Inventories backend endpoints, traces them across iOS / Android / web, and produces a PO-ready coverage matrix with gaps and drift. Includes 4 stdlib-only Python scripts.
+- **[raml-api-spec-search](skills/raml-api-spec-search/)** -- producer-side spec lookup against a central RAML repo (GitLab / GitHub). Pairs with `codebase-research` for spec-vs-implementation gap analysis.
 - **[multi-agent](skills/multi-agent/)** -- generic 4-layer orchestration pattern (proposal -> design -> specs -> tasks).
 
 ### Agents
@@ -25,6 +27,11 @@ Built by a PM who got tired of doing the same Jira-shaped rituals by hand, autom
 - `sizing-validator` -- T-shirt sizing (XS/S/M/L/XL) with scope validation
 - `breakdown-generator` -- generates epics and stories using configured templates
 - `quality-reviewer` -- INVEST validation + PO auto-review + control manifest
+- `mobile-delivery-agent` -- specialized assistant for mobile delivery managers; team-level patterns, release cycles, store constraints
+
+### Memory scaffold
+
+`memory/` -- empty starter knowledge-base structure (product/, patterns/, templates/, decisions/, feedback/, stakeholders/) plus a README explaining how each directory feeds the skills. Drop it into your project root and fill it in over time.
 
 ### Templates
 
