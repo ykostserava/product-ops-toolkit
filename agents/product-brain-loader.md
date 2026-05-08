@@ -16,7 +16,7 @@ Before any initiative breakdown starts, you ensure all necessary product context
 
 ### 1. Load Core Context
 
-Read the files listed in `config.yml` under `product.context_files`. A typical knowledge base includes:
+Read the files listed in `config.yml` under `product.context_files`. Paths in `config.yml` are resolved relative to the user's project (cwd), but they may also point at plugin-bundled defaults via `${CLAUDE_PLUGIN_ROOT}/...`. A typical knowledge base includes:
 
 - `memory/product/context.md` - product vision, team, priorities, constraints
 - `memory/product/product-definition.md` - one-source-of-truth definition
@@ -24,15 +24,15 @@ Read the files listed in `config.yml` under `product.context_files`. A typical k
 - `memory/decisions/workflow.md` - workflow rules (kanban vs scrum, sprint handling)
 - `memory/patterns/jira-api-best-practices.md` - Jira conventions for the team
 
-If any file listed in `config.yml` is missing, report it as a warning but continue if non-critical.
+If any file listed in `config.yml` is missing, report it as a warning but continue if non-critical. The plugin ships generic defaults at `${CLAUDE_PLUGIN_ROOT}/patterns/jira-api-best-practices.md` and `${CLAUDE_PLUGIN_ROOT}/patterns/user-story-format.md` — fall back to those if the project hasn't defined its own.
 
 ### 2. Load Templates
 
-Read the templates configured in `config.yml` under `templates.*`:
+Read the templates configured in `config.yml` under `templates.*`. Project paths (preferred) take precedence; plugin-bundled defaults at `${CLAUDE_PLUGIN_ROOT}/templates/...` are the fallback:
 
-- `templates/story-template.md` - story format the breakdown must use
-- `templates/task-template.md` - task format
-- `templates/epic-template.md` - epic format (if defined)
+- `templates/story-template.md` (or `${CLAUDE_PLUGIN_ROOT}/templates/story-template.md`) - story format the breakdown must use
+- `templates/task-template.md` (or `${CLAUDE_PLUGIN_ROOT}/templates/task-template.md`) - task format
+- `templates/epic-template.md` - epic format (if defined; no plugin default)
 
 ### 3. Load Initiative Details
 

@@ -141,11 +141,14 @@ docs/research/<YYYY-MM-DD>/
 
 All scripts are pure-Python stdlib, exit 0 on success / 1 on failure / 10 on validation failure. Run independently or chained by the skill.
 
+When invoked, resolve the bundled scripts via `${CLAUDE_PLUGIN_ROOT}` (run `echo "$CLAUDE_PLUGIN_ROOT"` once to get the absolute prefix):
+
 ```bash
-python scripts/detect_stack.py /path/to/repo
-python scripts/extract_endpoints.py /path/to/backend --feature <feature> > endpoints.json
-python scripts/find_api_callsites.py /path/to/ios --platform ios > ios_calls.json
-python scripts/build_coverage_matrix.py endpoints.json --ios ios_calls.json --android android_calls.json --web web_calls.json --out matrix.md
+SCRIPTS="${CLAUDE_PLUGIN_ROOT}/skills/codebase-research/scripts"
+python "$SCRIPTS/detect_stack.py" /path/to/repo
+python "$SCRIPTS/extract_endpoints.py" /path/to/backend --feature <feature> > endpoints.json
+python "$SCRIPTS/find_api_callsites.py" /path/to/ios --platform ios > ios_calls.json
+python "$SCRIPTS/build_coverage_matrix.py" endpoints.json --ios ios_calls.json --android android_calls.json --web web_calls.json --out matrix.md
 ```
 
 ---

@@ -132,7 +132,7 @@ If NEEDS DECOMPOSITION: "Decompose into smaller initiatives first"
 
 ## Tools Available
 
-- Read (to reference sizing guide: `patterns/tshirt-sizing-guide.md`)
+- Read (to reference sizing guide: `${CLAUDE_PLUGIN_ROOT}/patterns/tshirt-sizing-guide.md` when bundled with the product-ops plugin, or the project-local override path)
 
 ## Success Criteria
 

@@ -15,9 +15,11 @@ Creates a comprehensive PRD following a configurable template.
 ## Process
 
 1. **Load context**
-   - Read `memory/product/context.md` (product vision, priorities, constraints)
-   - Read `templates/prd-template.md` (from this toolkit or your own)
-   - Read `patterns/user-story-format.md`
+   - Read the project's product context (default: `memory/product/context.md` in the user's cwd; falls back to `${CLAUDE_PLUGIN_ROOT}/memory/product/context.md` only if explicitly bundled)
+   - Read PRD template: `${CLAUDE_PLUGIN_ROOT}/templates/prd-template.md` (or the user's project override at `templates/prd-template.md`)
+   - Read user-story format: `${CLAUDE_PLUGIN_ROOT}/patterns/user-story-format.md`
+
+   To resolve `${CLAUDE_PLUGIN_ROOT}` first, run a quick Bash check (e.g. `echo "$CLAUDE_PLUGIN_ROOT"`) and use the absolute path in subsequent Read calls.
 
 2. **Gather requirements** (interactive)
    - What problem does this solve?
@@ -48,6 +50,6 @@ Creates a comprehensive PRD following a configurable template.
 
 ## Related
 
-- [PRD Template](../../templates/prd-template.md)
-- [User Story Format](../../patterns/user-story-format.md)
-- Initiative Breakdown skill (to turn the PRD into epics and stories)
+- PRD Template: `${CLAUDE_PLUGIN_ROOT}/templates/prd-template.md`
+- User Story Format: `${CLAUDE_PLUGIN_ROOT}/patterns/user-story-format.md`
+- `initiative-breakdown` skill in this plugin (to turn the PRD into epics and stories)

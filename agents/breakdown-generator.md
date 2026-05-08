@@ -68,7 +68,7 @@ For each epic:
 
 ### 3. Generate Stories for Each Epic
 
-Use the story template configured in `config.yml` (e.g. `templates/story-template.md`).
+Use the story template configured in `config.yml` (e.g. `templates/story-template.md` in the project, or `${CLAUDE_PLUGIN_ROOT}/templates/story-template.md` for the plugin default).
 
 A typical generic story structure:
 

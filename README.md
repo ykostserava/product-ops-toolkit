@@ -76,20 +76,46 @@ If that fits, these tools will compound across every initiative, PRD, and sprint
 
 ## Quick Start
 
+This repo can be used **as a Claude Code plugin** (recommended) or copied manually.
+
+### Option A: Install as a Claude Code plugin (recommended)
+
+In Claude Code:
+
+```
+/plugin install https://github.com/ykostserava/product-ops-toolkit
+```
+
+After install, all skills are namespaced under `product-ops:`:
+
+```
+/product-ops:initiative-breakdown PROJ-42 --dry-run
+/product-ops:product-spec "Savings goals"
+/product-ops:codebase-research ./apps/api
+/product-ops:scaffold-memory       # bootstraps memory/ in your project
+```
+
+The plugin bundles templates, patterns, and agent definitions, and resolves them via `${CLAUDE_PLUGIN_ROOT}` at runtime, so they keep working after upgrades.
+
+To pin a version, set `version` in `.claude-plugin/plugin.json` and tag the release; Claude Code uses the tagged commit. To get unreleased changes, use the latest commit.
+
+### Option B: Manual install (git-clone + cp)
+
 1. **Clone this repo** next to your project:
    ```bash
    git clone https://github.com/ykostserava/product-ops-toolkit.git
    ```
 
-2. **Copy skills into your Claude Code setup**:
+2. **Copy skills and agents into your Claude Code setup**:
    ```bash
-   cp -r product-ops-toolkit/skills/* ~/your-project/.claude/skills/
-   cp -r product-ops-toolkit/agents/* ~/your-project/.claude/agents/
+   cp -r product-ops-toolkit/skills/* ~/.claude/skills/
+   cp -r product-ops-toolkit/agents/* ~/.claude/agents/
    ```
+   Note: with manual install, references to `${CLAUDE_PLUGIN_ROOT}` inside SKILL.md and agent files won't resolve — replace them with absolute paths to where you cloned the repo, or copy the templates / patterns / memory directories into your project.
 
 3. **Configure `config.yml`** inside `skills/initiative-breakdown/` - set your product name, Jira URL, platforms, templates, and constraints.
 
-4. **Seed your `memory/`** directory with product context, patterns, and templates (or reference the ones in this repo directly).
+4. **Seed your `memory/`** directory with product context, patterns, and templates. Run `/scaffold-memory` (after copying the skill) or copy the `memory/` scaffold from this repo.
 
 5. **Run a skill**:
    ```

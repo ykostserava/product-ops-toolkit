@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "product-ops",
+  "version": "0.1.0",
+  "description": "AI-native toolkit for Product Owners, Delivery Managers, and engineering leads. Multi-agent initiative breakdown, PRD generation, codebase research, RAML spec lookup, and a memory-scaffold workflow — all configurable per team.",
+  "author": {
+    "name": "Yauheniya Kostserava",
+    "url": "https://github.com/ykostserava"
+  },
+  "homepage": "https://github.com/ykostserava/product-ops-toolkit",
+  "repository": "https://github.com/ykostserava/product-ops-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "product-owner",
+    "delivery-manager",
+    "jira",
+    "prd",
+    "initiative-breakdown",
+    "raml",
+    "api-coverage",
+    "kanban"
+  ]
+}

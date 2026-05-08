@@ -6,6 +6,8 @@ description: Multi-agent initiative breakdown - orchestrates 4 specialized agent
 
 **Multi-Agent Orchestration for Product Planning**
 
+> **Path resolution.** This skill is bundled with templates, patterns, and agent definitions in the plugin root. Whenever a path below references `${CLAUDE_PLUGIN_ROOT}`, run `echo "$CLAUDE_PLUGIN_ROOT"` in Bash first to get the absolute prefix, then call Read with the fully-resolved path.
+
 Breaks an initiative down into **feature-based epics**, then into **platform-specific stories and tasks**, using **4 specialized Claude Code agents** coordinated through **approval gates** at each phase.
 
 Designed for product owners and delivery managers who want AI-assisted breakdown that stays aligned with their team's conventions (templates, platform tagging, Jira project structure) without hand-crafting each story.
@@ -166,7 +168,7 @@ Each phase is handled by a specialized agent (see `agents/` directory). Between 
    ```
    Agent tool:
      description: "Load product context for initiative breakdown"
-     prompt: "Follow instructions in agents/product-brain-loader.md to:
+     prompt: "Follow instructions in ${CLAUDE_PLUGIN_ROOT}/agents/product-brain-loader.md to:
        1. Load files listed in config.yml under product.context_files
        2. Load templates from config.yml under templates.*
        3. Load initiative details from [Jira key or PRD file path]
@@ -213,7 +215,7 @@ If "Yes": proceed to Phase 2.
    ```
    Agent tool:
      description: "Assess initiative size and validate scope"
-     prompt: "Follow instructions in agents/sizing-validator.md to:
+     prompt: "Follow instructions in ${CLAUDE_PLUGIN_ROOT}/agents/sizing-validator.md to:
        1. Assess T-shirt size (XS/S/M/L/XL) based on:
           - Feature complexity
           - Platform coverage
@@ -277,7 +279,7 @@ If "Yes": proceed to Phase 3.
    ```
    Agent tool:
      description: "Generate epic and story breakdown"
-     prompt: "Follow instructions in agents/breakdown-generator.md to:
+     prompt: "Follow instructions in ${CLAUDE_PLUGIN_ROOT}/agents/breakdown-generator.md to:
        1. Determine epic structure based on size from Phase 2
        2. Generate N feature-based epics with:
           description, user value, scope, dependencies, success criteria
@@ -343,7 +345,7 @@ If "Yes": proceed to Phase 4.
    ```
    Agent tool:
      description: "Quality review and control manifest"
-     prompt: "Follow instructions in agents/quality-reviewer.md to:
+     prompt: "Follow instructions in ${CLAUDE_PLUGIN_ROOT}/agents/quality-reviewer.md to:
        1. Run INVEST validation on ALL stories:
           Independent, Negotiable, Valuable, Estimable, Small, Testable
           Score each criterion (pass 1.0, partial 0.5, fail 0.0)
@@ -439,7 +441,7 @@ Quality audit with:
 - Dependencies and blockers
 - GO / NO-GO decision with rationale
 
-See `templates/control-manifest-template.md`.
+See `${CLAUDE_PLUGIN_ROOT}/skills/initiative-breakdown/templates/control-manifest-template.md`.
 
 ### 3. Jira Issues (if `--create-in-jira`)
 
@@ -476,10 +478,13 @@ The breakdown will only be as good as this knowledge base. Invest in it.
 
 ## Patterns This Skill Uses
 
-- [Initiative Breakdown Pattern](patterns/initiative-breakdown-pattern.md) - why feature-based over platform-based
-- [T-Shirt Sizing Guide](patterns/tshirt-sizing-guide.md) - sizing framework with examples
-- [Requirements Patterns](patterns/requirements-patterns.md) - reusable story archetypes
-- [AI Personas](patterns/ai-personas.md) - agent persona design for consistency
+Top-level (shared across the plugin):
+- `${CLAUDE_PLUGIN_ROOT}/patterns/initiative-breakdown-pattern.md` - why feature-based over platform-based
+- `${CLAUDE_PLUGIN_ROOT}/patterns/tshirt-sizing-guide.md` - sizing framework with examples
+
+Skill-local (specific to initiative-breakdown):
+- `${CLAUDE_PLUGIN_ROOT}/skills/initiative-breakdown/patterns/requirements-patterns.md` - reusable story archetypes
+- `${CLAUDE_PLUGIN_ROOT}/skills/initiative-breakdown/patterns/ai-personas.md` - agent persona design for consistency
 
 ---
 
