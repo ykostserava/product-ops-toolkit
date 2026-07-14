@@ -1,6 +1,7 @@
 # Requirements Patterns
 
-> Reusable patterns and common requirements that the breakdown skill can auto-apply when sections are missing.
+> **Purpose:** Common patterns and reusable requirements the breakdown skill can auto-apply when sections are missing
+> **Usage:** The `breakdown-generator` and `quality-reviewer` agents use these to auto-fill missing sections in stories
 
 Customize this file for your product domain -- these are generic patterns that cover common fintech / consumer app needs. Add or remove patterns based on what your product deals with.
 
@@ -9,58 +10,88 @@ Customize this file for your product domain -- these are generic patterns that c
 ## Common User Story Patterns
 
 ### Pattern: Account Management
-
 ```
 As a user
-I want to [view / select / switch / add / close] my account
-So that I can manage my resources across multiple accounts
+I want to [view/select/switch] my account
+So that I can manage my finances across multiple accounts
 ```
 
-### Pattern: Transaction / Record Handling
+**Common variations:**
+- View account details
+- Select active account
+- Switch between accounts
+- Add new account
+- Close/deactivate account
 
+### Pattern: Transaction Handling
 ```
 As a user
-I want to [view / filter / search / export] my transactions
-So that I can track and manage them effectively
+I want to [view/filter/search/export] my transactions
+So that I can track my spending effectively
 ```
+
+**Common variations:**
+- View transaction history
+- Filter by date/amount/category
+- Search transactions
+- Export to CSV/PDF
+- Categorize transactions
 
 ### Pattern: Payments & Transfers
-
 ```
 As a user
-I want to [send / receive / request] [resource]
-So that I can complete transactions conveniently
+I want to [send/receive/request] money
+So that I can make payments conveniently
 ```
 
-### Pattern: Goal / Target Management
+**Common variations:**
+- Send money to contact
+- Request payment
+- Receive money (QR code)
+- Schedule recurring payment
+- Split bill with friends
 
+### Pattern: Savings & Goals
 ```
 As a user
-I want to [create / track / manage] [goals / targets]
-So that I can make progress toward objectives
+I want to [create/track/manage] savings goals
+So that I can save toward my financial objectives
 ```
+
+**Common variations:**
+- Create savings goal
+- Track progress toward goal
+- Deposit to savings
+- Withdraw from savings
+- Delete completed goal
 
 ### Pattern: Security & Authentication
-
 ```
 As a user
-I want to [authenticate / verify / secure] my account
-So that my data remains secure
+I want to [authenticate/verify/secure] my account
+So that my financial data remains secure
 ```
+
+**Common variations:**
+- Biometric login
+- 2FA verification
+- Session timeout
+- Device authorization
+- Security alerts
 
 ---
 
 ## Common Acceptance Criteria
 
-### UI / UX Criteria
+### UI/UX Criteria
 
-**Screen loading:**
-- [ ] Screen loads within 2 seconds on typical network
-- [ ] Loading indicator displayed while fetching
+**Screen Loading:**
+- [ ] Screen loads within 2 seconds on 4G connection
+- [ ] Loading indicator displayed while fetching data
 - [ ] Cached data shown immediately, updated in background
 
-**Form validation:**
-- [ ] Required fields marked clearly
+**Form Validation:**
+- [ ] All required fields marked with asterisk (*)
 - [ ] Inline validation shows errors immediately
 - [ ] Error messages are specific and actionable
 - [ ] Submit button disabled until form is valid
@@ -69,43 +100,44 @@ So that my data remains secure
 - [ ] Back button returns to previous screen
 - [ ] Navigation preserves scroll position
 - [ ] Deep links work correctly
+- [ ] Tab bar highlights active section
 
-**Empty states:**
+**Empty States:**
 - [ ] Empty state shown when no data exists
 - [ ] CTA button visible in empty state
 - [ ] Helpful text explains next steps
 
 ### Data Criteria
 
-**Display:**
-- [ ] Currency formatted correctly per locale
-- [ ] Dates formatted per locale
-- [ ] Large numbers use thousand separators
-- [ ] Negative amounts distinguished visually
+**Data Display:**
+- [ ] Currency formatted correctly (EUR, USD, etc.)
+- [ ] Dates formatted in user's locale (DD/MM/YYYY or MM/DD/YYYY)
+- [ ] Large numbers use thousand separators (1,000.00)
+- [ ] Negative amounts shown in red (optional: with minus sign)
 
-**Persistence:**
-- [ ] Changes saved immediately (no manual save where possible)
-- [ ] Optimistic UI updates shown before confirmation
+**Data Persistence:**
+- [ ] Changes saved immediately (no manual save)
+- [ ] Optimistic UI updates shown before API confirmation
 - [ ] Data synced across devices
 - [ ] Conflict resolution handles concurrent edits
 
 ### Security Criteria
 
 **Authentication:**
-- [ ] Session expires after configurable inactivity period
-- [ ] Biometric authentication available where supported
+- [ ] Session expires after 15 minutes of inactivity
+- [ ] Biometric authentication available (if device supports)
 - [ ] Sensitive screens require re-authentication
 - [ ] Session invalidated on logout
 
-**Data protection:**
+**Data Protection:**
 - [ ] Passwords never logged or stored in plaintext
-- [ ] Sensitive data encrypted in transit (HTTPS / TLS)
+- [ ] Sensitive data encrypted in transit (HTTPS)
 - [ ] Sensitive data encrypted at rest
 - [ ] PII redacted in error logs
 
 ### Accessibility Criteria
 
-**Screen reader:**
+**Screen Reader:**
 - [ ] All elements have accessibility labels
 - [ ] Images have alt text
 - [ ] Forms announce errors to screen reader
@@ -113,9 +145,9 @@ So that my data remains secure
 
 **Visual:**
 - [ ] Text contrast meets WCAG 2.1 AA (4.5:1)
-- [ ] Body font size minimum 16px
+- [ ] Font size minimum 16px (body text)
 - [ ] Touch targets minimum 44x44pt
-- [ ] Color is not the only indicator
+- [ ] Color not the only indicator (use icons/text too)
 
 ---
 
@@ -123,107 +155,137 @@ So that my data remains secure
 
 ### Network Errors
 
-| Scenario | Expected behaviour | Error message |
-|----------|-------------------|---------------|
-| No internet connection | Show offline indicator, cached data | "No internet connection. Showing cached data." |
-| API timeout (>10s) | Show retry, preserve input | "Request timed out. Tap to retry." |
-| Server error 500 | Show error state with retry | "Something went wrong. Please try again." |
-| Bad gateway 502/503 | Show maintenance message | "Service temporarily unavailable." |
+| Error Scenario | Expected Behaviour | Error Message |
+|----------------|-------------------|---------------|
+| No internet connection | Show offline indicator, use cached data | "No internet connection. Showing cached data." |
+| API timeout (>10s) | Show retry button, preserve user input | "Request timed out. Tap to retry." |
+| Server error (500) | Show error state with retry option | "Something went wrong. Please try again." |
+| Bad gateway (502/503) | Show maintenance message | "Service temporarily unavailable. Please try again later." |
 
 ### Authentication Errors
 
-| Scenario | Expected behaviour | Error message |
-|----------|-------------------|---------------|
-| Session expired | Redirect to login, preserve state | "Your session has expired. Please log in again." |
-| Invalid credentials | Highlight field, inline error | "Incorrect email or password." |
-| Account locked | Show support contact | "Account locked. Contact support." |
-| 2FA invalid | Allow retry (limited), countdown | "Invalid code. N attempts remaining." |
+| Error Scenario | Expected Behaviour | Error Message |
+|----------------|-------------------|---------------|
+| Session expired | Redirect to login, preserve navigation state | "Your session has expired. Please log in again." |
+| Invalid credentials | Highlight field, show error inline | "Incorrect email or password." |
+| Account locked | Show contact support message | "Account locked. Contact support for assistance." |
+| 2FA code invalid | Allow retry (3 attempts), show countdown | "Invalid verification code. 2 attempts remaining." |
 
 ### Validation Errors
 
-| Scenario | Expected behaviour | Error message |
-|----------|-------------------|---------------|
-| Required empty | Highlight, error below | "This field is required." |
-| Invalid format | Show error on blur | "Please enter a valid [format]." |
-| Amount over limit | Disable submit, show limit | "Maximum: [amount]" |
-| Amount below minimum | Inline error | "Minimum: [amount]" |
+| Error Scenario | Expected Behaviour | Error Message |
+|----------------|-------------------|---------------|
+| Required field empty | Highlight field, show error below | "This field is required." |
+| Invalid email format | Show error on blur | "Please enter a valid email address." |
+| Amount exceeds balance | Disable submit, show error | "Insufficient balance. Maximum: 1,234.56 EUR" |
+| Amount below minimum | Show error inline | "Minimum amount: 0.01 EUR" |
 
-### Transaction / Action Errors
+### Transaction Errors
 
-| Scenario | Expected behaviour | Error message |
-|----------|-------------------|---------------|
-| Insufficient resources | Prevent, show available | "Insufficient. Available: [amount]" |
-| Daily limit exceeded | Prevent, show limit | "Daily limit exceeded. Limit: [amount]" |
-| Target not found | Show error, allow retry | "Not found. Please check details." |
-| Action declined | Show reason, offer alternatives | "Declined. [Reason]" |
+| Error Scenario | Expected Behaviour | Error Message |
+|----------------|-------------------|---------------|
+| Insufficient balance | Prevent transaction, show balance | "Insufficient balance. Available: 123.45 EUR" |
+| Daily limit exceeded | Prevent transaction, show limit | "Daily limit exceeded. Limit: 5,000.00 EUR" |
+| Recipient not found | Show error, allow retry | "Recipient not found. Please check the details." |
+| Transaction declined | Show decline reason, offer alternatives | "Transaction declined. [Reason from bank]" |
 
 ---
 
 ## Common Edge Cases
 
-**Offline:** user loses connection mid-flow.
-- Show offline indicator
-- Queue actions for later sync
-- Allow viewing cached data
-- Prevent actions that need network
-- Auto-retry when connection restored
+### Offline Behaviour
+- **Scenario:** User loses internet connection mid-flow
+- **Expected:**
+  - Show offline indicator at top of screen
+  - Queue actions (like "favorite transaction") for later sync
+  - Allow viewing cached data
+  - Prevent actions that require network (like payments)
+  - Auto-retry when connection restored
 
-**Low connectivity:** user on slow connection.
-- Show cached data immediately
-- Update in background
-- Compress payloads / assets
-- Show "slow connection" indicator if >Ns
+### Low Connectivity (2G/slow 3G)
+- **Scenario:** User on slow connection
+- **Expected:**
+  - Show cached data immediately
+  - Update in background when data arrives
+  - Compress images/assets
+  - Reduce API payload size
+  - Show "slow connection" indicator if >5s
 
-**Data boundaries:**
-- **Empty:** 0 items -> empty state with CTA
-- **Large:** 10k+ items -> paginate (load N at a time)
-- **Long strings:** truncate with ellipsis, show full on tap
-- **Large numbers:** format with abbreviation (1.2M)
+### Data Boundary Cases
 
-**Concurrent actions:**
-- User edits same data on 2 devices
-- Last write wins (timestamp-based)
-- Sync conflict notification
-- Option to view both and choose
+**Empty Data:**
+- 0 transactions -> Show empty state with CTA
+- 0 accounts -> Show onboarding flow
+- 0 contacts -> Suggest adding first contact
 
-**System boundaries:**
-- Very old device / browser -> graceful degradation
-- App in background >Nh -> re-authenticate, refresh data
+**Large Data:**
+- 10,000+ transactions -> Paginate (load 50 at a time)
+- Very long account name (>50 chars) -> Truncate with ellipsis
+- Large transaction amount (>1M) -> Format with abbreviation (1.2M)
+
+**Multi-Currency:**
+- User has accounts in EUR, USD, GBP -> Show currency symbol
+- Transaction in different currency than account -> Show exchange rate
+- Mixed currency portfolio -> Show total in primary currency
+
+### Concurrent Actions
+
+**Scenario:** User edits data on 2 devices simultaneously
+- **Expected:**
+  - Last write wins (timestamp-based)
+  - Sync conflict notification shown
+  - Option to view both versions and choose
+
+### System Boundaries
+
+**Very old devices / OS versions:**
+- Graceful degradation (disable advanced features)
+- Show "update required" message if critical features unavailable
+
+**App in background >1 hour:**
+- Require biometric/PIN re-authentication
+- Refresh data on foreground
+- Resume user's navigation state
 
 ---
 
 ## Common Analytics Events
 
-### Screen View
+### Screen View Events
 
-| Event | Trigger | Parameters |
-|-------|---------|------------|
-| `screen_viewed` | Navigation | `screen_name`, `previous_screen` |
-| `dashboard_viewed` | App open | `session_count`, `state_summary` |
+| Event Name | Trigger | Parameters | Notes |
+|------------|---------|------------|-------|
+| `screen_viewed` | User navigates to screen | `screen_name`, `previous_screen` | Track navigation flow |
+| `dashboard_viewed` | User opens app | `account_count`, `has_pending_transactions` | Entry point tracking |
+| `transaction_list_viewed` | User views transactions | `filter_applied`, `sort_by` | Feature usage |
 
-### User Actions
+### User Action Events
 
-| Event | Trigger | Parameters |
-|-------|---------|------------|
-| `action_completed` | User completes action | `action_type`, `duration_ms`, `from_screen` |
-| `action_failed` | Action fails | `action_type`, `error_code`, `error_message` |
-| `filter_applied` | User applies filter | `filter_type`, `filter_value` |
+| Event Name | Trigger | Parameters | Notes |
+|------------|---------|------------|-------|
+| `account_selected` | User selects account | `account_id`, `account_type`, `from_screen` | Conversion tracking |
+| `transaction_filtered` | User applies filter | `filter_type`, `date_range`, `amount_range` | Feature engagement |
+| `payment_initiated` | User starts payment | `amount`, `currency`, `recipient_type` | Funnel start |
+| `payment_completed` | Payment succeeds | `amount`, `currency`, `payment_method`, `duration_ms` | Conversion |
+| `payment_failed` | Payment fails | `error_code`, `error_message`, `amount` | Error tracking |
 
-### Engagement
+### Feature Engagement Events
 
-| Event | Trigger | Parameters |
-|-------|---------|------------|
-| `feature_used` | User uses feature | `feature_name`, `duration_ms` |
-| `settings_changed` | User changes setting | `setting_name`, `old_value`, `new_value` |
+| Event Name | Trigger | Parameters | Notes |
+|------------|---------|------------|-------|
+| `savings_goal_created` | User creates goal | `goal_amount`, `target_date`, `category` | Feature adoption |
+| `savings_goal_completed` | User reaches goal | `goal_id`, `days_to_complete`, `amount` | Success metric |
+| `export_transaction_csv` | User exports data | `date_range`, `transaction_count` | Power user feature |
+| `biometric_enabled` | User enables biometrics | `biometric_type` (face/fingerprint) | Security adoption |
 
-### Performance
+### Performance Events
 
-| Event | Trigger | Parameters |
-|-------|---------|------------|
-| `api_call_duration` | API call completes | `endpoint`, `duration_ms`, `status_code` |
-| `screen_load_time` | Screen finishes loading | `screen_name`, `load_time_ms`, `cache_hit` |
+| Event Name | Trigger | Parameters | Notes |
+|------------|---------|------------|-------|
+| `api_call_duration` | API call completes | `endpoint`, `duration_ms`, `status_code` | Performance monitoring |
+| `screen_load_time` | Screen finishes loading | `screen_name`, `load_time_ms`, `cache_hit` | UX metric |
 
-Customize event naming to match your team's convention (e.g. `screen_action_object` vs `snake_case_flat`).
+Customize event naming to match your team's convention (e.g. `screen_action_object` vs flat snake_case).
 
 ---
 
@@ -231,63 +293,72 @@ Customize event naming to match your team's convention (e.g. `screen_action_obje
 
 ### Performance
 
-| Category | Requirement | Measurement |
-|----------|-------------|-------------|
-| API calls | <500ms (p95) | Monitoring / APM |
-| Screen load | <2s on typical network | Performance monitoring |
-| App launch | <3s cold start | Performance monitoring |
-| Animation | 60 FPS | On-device profiler |
+| Category | Requirement | Example | Measurement |
+|----------|-------------|---------|-------------|
+| **Response Time** | API calls <500ms (p95) | Transaction list loads in 300ms | Analytics / APM tool |
+| **Screen Load** | Screens load <2s on 4G | Dashboard loads in 1.5s | Performance monitoring |
+| **App Launch** | Cold start <3s | App opens in 2.8s | Performance monitoring |
+| **Animation** | 60 FPS (smooth scrolling) | Transaction list scrolls at 60 FPS | On-device profiler |
 
 ### Security
 
-| Category | Requirement | Validation |
-|----------|-------------|------------|
-| Data encryption | In transit + at rest | Security audit |
-| Authentication | Session timeout | Manual test |
-| Secrets | Never in logs / source | Code review |
-| PII protection | Redacted in logs | Log review |
+| Category | Requirement | Example | Validation |
+|----------|-------------|---------|------------|
+| **Data Encryption** | All data encrypted in transit and at rest | HTTPS + AES-256 for local storage | Security audit |
+| **Authentication** | Session timeout after 15min inactivity | User re-authenticates after timeout | Manual test |
+| **Secrets** | No secrets in logs, source code, or error messages | API keys never logged | Code review |
+| **PII Protection** | Personally identifiable info redacted in logs | Email shown as e***@example.com | Log review |
 
 ### Reliability
 
-| Category | Requirement | Measurement |
-|----------|-------------|-------------|
-| Uptime | 99.9% API uptime | Uptime monitor |
-| Crash rate | <0.1% sessions | Crash reporter |
-| Error handling | Graceful degradation | Manual test |
-| Data integrity | No loss on crashes | QA validation |
+| Category | Requirement | Example | Measurement |
+|----------|-------------|---------|-------------|
+| **Uptime** | 99.9% API uptime | Max 43min downtime/month | Uptime monitor |
+| **Crash Rate** | <0.1% sessions | <1 crash per 1000 sessions | Crash reporter |
+| **Error Handling** | Graceful degradation on API errors | Show cached data if API fails | Manual test |
+| **Data Integrity** | No data loss on crashes | Pending actions saved, synced on restart | QA validation |
 
 ### Accessibility
 
-| Category | Requirement | Validation |
-|----------|-------------|------------|
-| Screen reader | Full support | Accessibility audit |
-| Contrast | WCAG 2.1 AA | Contrast tool |
-| Touch targets | Minimum 44x44pt | Design review |
-| Font scaling | Up to 200% | Manual test |
+| Category | Requirement | Example | Validation |
+|----------|-------------|---------|------------|
+| **Screen Reader** | Full VoiceOver/TalkBack support | All elements have labels | Accessibility audit |
+| **Contrast** | WCAG 2.1 AA (4.5:1 for text) | Text readable on background | Color contrast tool |
+| **Touch Targets** | Minimum 44x44pt | Buttons meet minimum size | Design review |
+| **Font Scaling** | Supports system font sizes (up to 200%) | Text readable at 200% scale | Manual test |
 
 ---
 
 ## Common API Endpoint Patterns
 
-### RESTful resource endpoints
+### RESTful Patterns
 
+**Account Endpoints:**
 ```
-GET    /api/v1/{resource}              # List
-GET    /api/v1/{resource}/{id}         # Detail
-POST   /api/v1/{resource}              # Create
-PUT    /api/v1/{resource}/{id}         # Update
-DELETE /api/v1/{resource}/{id}         # Delete
+GET    /api/v1/accounts              # List all accounts
+GET    /api/v1/accounts/{id}         # Get account details
+POST   /api/v1/accounts              # Create account
+PUT    /api/v1/accounts/{id}         # Update account
+DELETE /api/v1/accounts/{id}         # Close account
 ```
 
-### Common query parameters
+**Transaction Endpoints:**
+```
+GET    /api/v1/transactions          # List transactions (paginated)
+GET    /api/v1/transactions/{id}     # Get transaction details
+POST   /api/v1/transactions          # Create transaction (payment)
+GET    /api/v1/transactions/export   # Export transactions (CSV)
+```
 
-- `?page=1&limit=50` - pagination
-- `?sort=field:desc` - sorting
-- `?filter[field]=value` - filtering
-- `?filter[field_min]=N&filter[field_max]=M` - range
+**Query Parameters:**
+- `?page=1&limit=50` - Pagination
+- `?sort=date:desc` - Sorting
+- `?filter[date]=2024-01-01:2024-01-31` - Filtering
+- `?filter[amount_min]=100&filter[amount_max]=500` - Range filtering
 
-### Response envelope (example)
+### Response Format
 
+**Success Response:**
 ```json
 {
   "data": { ... },
@@ -298,65 +369,136 @@ DELETE /api/v1/{resource}/{id}         # Delete
 }
 ```
 
-### Error envelope (example)
-
+**Error Response:**
 ```json
 {
   "error": {
-    "code": "ERROR_CODE",
-    "message": "Human-readable message",
-    "details": { ... }
+    "code": "INSUFFICIENT_BALANCE",
+    "message": "Insufficient balance for this transaction",
+    "details": {
+      "available": 123.45,
+      "required": 200.00
+    }
   },
-  "meta": { ... }
+  "meta": {
+    "timestamp": "2026-04-14T10:30:00Z",
+    "request_id": "abc123"
+  }
 }
 ```
 
-### Common headers
+### Common Headers
 
 **Request:**
 - `Authorization: Bearer {token}`
 - `Content-Type: application/json`
 - `X-Client-Version: 1.2.3`
+- `X-Platform: ios` (or `android`, `web`)
 
 **Response:**
-- `X-Request-ID: abc123`
-- `X-RateLimit-Remaining: 95`
-- `Cache-Control: max-age=60`
+- `X-Request-ID: abc123` (for debugging)
+- `X-RateLimit-Remaining: 95` (rate limiting)
+- `Cache-Control: max-age=60` (caching)
 
 ---
 
 ## Common Feature Flags
 
-### Pattern: Gradual rollout
+### Pattern: Gradual Rollout
 
 ```
-enable_{feature_name}  = false  # default off
-{feature}_{parameter}  = N      # A/B testing
+enable_new_dashboard_ui = false   # Default off, gradual rollout
+account_card_height_dp  = 80      # A/B testing different heights
+enable_savings_goals    = true    # Feature complete, on for all
 ```
 
-### Pattern: Kill switch
+**Naming convention:**
+- `enable_{feature_name}` - Boolean flags for features
+- `{feature}_{parameter}` - Configuration parameters
+- Use snake_case for consistency
+
+### Pattern: Kill Switch
 
 ```
-enable_critical_flow = true  # can disable quickly
+enable_payment_processing = true  # Can disable quickly if issues
+enable_biometric_auth = true      # Can revert to password-only
 ```
+
+**Purpose:** Quickly disable feature in production if critical bug found
 
 ---
 
-## How to Use This File
+## Common Localisation Requirements
 
-The `breakdown-generator` and `quality-reviewer` agents read this file to auto-fill missing sections in stories. When a section is empty:
+### Supported Languages (define yours in config.yml)
 
-- **Error Handling empty** -> pick relevant error scenarios from this file
-- **Edge Cases empty** -> pick offline / low-connectivity / data-boundary patterns
-- **NFRs empty** -> apply performance / security / reliability standards
-- **Analytics empty** -> generate events based on screen / action type
+| Language | Code | Market | Status |
+|----------|------|--------|--------|
+| English | en | International | Default |
+| {Primary market language} | {xx} | Primary market | Required |
+| {Secondary market language} | {xx} | Secondary market | Required |
+| {Expansion market language} | {xx} | Expansion market | Optional |
 
-**Context-aware pattern matching:**
-- Story mentions "account" -> Account Management pattern
-- Story mentions "transaction" -> Transaction pattern
-- Story mentions "payment" -> Payments pattern
+### Localisation Checklist
 
-**Adapt, don't copy blindly:**
-- Customize patterns to specific feature context
-- Add feature-specific edge cases
-- Include domain-specific validation rules
+- [ ] All user-facing text extracted to strings file
+- [ ] Date/time formatted per locale (DD/MM vs MM/DD)
+- [ ] Currency formatted per locale (1.234,56 vs 1,234.56)
+- [ ] Number formatting matches locale (decimal separator)
+- [ ] Plurals handled correctly (1 item, 2 items, 5 items)
+- [ ] RTL layout tested (if RTL language support added)
+
+---
+
+## Common User Tier Applicability
+
+Replace this example with your product's actual user / verification model (define it in config.yml).
+
+### Example User Tiers
+
+| Tier | Description | Applicability |
+|------|-------------|---------------|
+| **Tier 1** | Basic user (email verified) | All basic features |
+| **Tier 2** | Verified user (ID submitted) | Enhanced limits |
+| **Tier 3** | Business accounts | Business-specific features |
+| **Tier 4** | Enterprise/VIP | Premium features |
+
+### Pattern: Feature Gating by Tier
+
+**Example: Savings Goals**
+- Tier 1: Can create up to 3 goals
+- Tier 2: Can create up to 10 goals, multi-currency goals
+- Tier 3: Business savings goals (separate from personal)
+- Tier 4: Unlimited goals, premium rates
+
+---
+
+## Usage Instructions for the Breakdown Agents
+
+**When generating story descriptions:**
+
+1. **Auto-fill missing sections** using patterns above:
+   - If "Error Handling" is empty -> use common error scenarios
+   - If "Edge Cases" is empty -> use common edge cases (offline, low connectivity)
+   - If "NFRs" is empty -> use performance, security, reliability standards
+   - If "Analytics Events" is empty -> generate based on screen/action type
+
+2. **Context-aware pattern matching:**
+   - If story mentions "account" -> use Account Management pattern
+   - If story mentions "transaction" -> use Transaction Handling pattern
+   - If story mentions "payment" -> use Payments & Transfers pattern
+
+3. **Maintain consistency:**
+   - Use same error messages across similar features
+   - Use same NFR thresholds (2s load time, 99.9% uptime)
+   - Use same analytics event naming (snake_case)
+
+4. **Adapt, don't copy blindly:**
+   - Customize patterns to specific feature context
+   - Add feature-specific edge cases
+   - Include domain-specific validation rules
+
+---
+
+**Maintained by:** Product Owner
+**Review Cycle:** Monthly (or when new patterns emerge)

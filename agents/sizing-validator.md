@@ -75,6 +75,58 @@ Evaluate these factors:
 - Proceed to Phase 3: Breakdown
 - Flag high-risk areas
 
+### 2.5. Capability & Visibility Reality Check (MANDATORY when configured)
+
+If `config.yml` lists canonical reference docs under `product.availability_docs` (e.g. a service-by-market availability matrix and a customer-segment visibility spec), read them as part of EVERY assessment. If the list is empty, note "Capability validation: SKIPPED (no availability_docs configured)" and move on.
+
+For every service / surface / account context mentioned in the initiative, verify:
+
+**Market gate check:**
+- Is each scoped service actually available in the market(s) named in the scope?
+- Example trap: the initiative scopes "High-Yield Savings" for Market B, but the availability matrix says the underlying deposit service only operates in Market A today. Flag it - don't silently narrow the scope.
+- Watch for services with planned-but-not-launched markets: planned availability is not current availability.
+
+**Customer-segment gate check:**
+- Consumer-only services must not be scoped for business customers, and vice versa (check your visibility spec for which services belong to which segment).
+- Special access modes (shared-account member, manager-of-entity, delegated access) are contexts, not separate customer types - don't scope them as if they get a full separate product surface.
+
+**Domain-model correctness check:**
+- Story wording must match the canonical domain model in your reference docs.
+- Flag wording that splits one canonical entity into several (e.g. calling a currency sub-balance a "separate account" when the model says one account holds multiple currency balances).
+- Flag wording that treats two names for the same entity as different things (e.g. "Goal account" vs "Savings account" when the model defines them as one entity).
+- Flag special account kinds framed incorrectly (e.g. a partner-locked or card-linked account treated as a general-purpose account).
+
+**Visibility-rule check:**
+- Unavailable services should follow your product's visibility pattern (e.g. silent-hide rather than "not available in your country" copy) - flag AC that contradicts it.
+- "Coming soon" states only for launches with confirmed dates in the canonical docs.
+- If your product has a capability-resolver / feature-availability endpoint, reference it rather than hardcoding availability assumptions into stories.
+
+**Unverified-claim check:**
+- Never propagate marketing claims (market counts, user counts, licence numbers) that are not verified in the canonical docs. Flag any such copy for removal.
+
+Output: include a Capability Validation section in your final decision:
+
+```markdown
+## Capability & Visibility Validation: [PASS / WARNINGS / FAIL / SKIPPED]
+
+**Market gate findings:**
+[list of services x markets checked, plus any violations]
+
+**Customer-segment findings:**
+[any cross-segment scope issues]
+
+**Domain-model correctness:**
+[any entity-naming or entity-conflation wording to fix]
+
+**Visibility rule findings:**
+[any "not available" copy, missing silent-hide, wrong coming-soon usage]
+
+**Unverified-claim findings:**
+[any marketing copy that needs to be removed]
+```
+
+If any finding is FAIL-level (e.g. a service scoped for a market where the availability matrix says it doesn't operate), include it in the high-level `Decision` block as CAPABILITY-FIX with explicit "rewrite the market / segment scope before resubmitting". Never silent-fix scope - surface the conflict to the user.
+
 ### 3. Risk Assessment
 
 Identify high-risk areas:
@@ -116,6 +168,12 @@ Identify high-risk areas:
 
 ---
 
+## Capability & Visibility Validation
+
+[Section from step 2.5 - PASS / WARNINGS / FAIL / SKIPPED with findings]
+
+---
+
 ## Risk Assessment
 
 **High-Risk Areas:**
@@ -123,16 +181,18 @@ Identify high-risk areas:
 
 ---
 
-**Decision:** [GO / NO-GO / NEEDS DECOMPOSITION]
+**Decision:** [GO / NO-GO / NEEDS DECOMPOSITION / CAPABILITY-FIX]
 
 If GO: "Ready for Phase 3: Breakdown"
 If NO-GO: "Fix issues before proceeding"
 If NEEDS DECOMPOSITION: "Decompose into smaller initiatives first"
+If CAPABILITY-FIX: "Market / segment scope conflicts with the canonical availability docs. Rewrite scope first."
 ```
 
 ## Tools Available
 
 - Read (to reference sizing guide: `${CLAUDE_PLUGIN_ROOT}/patterns/tshirt-sizing-guide.md` when bundled with the product-ops plugin, or the project-local override path)
+- Read (to reference the canonical availability / visibility docs listed in `config.yml` under `product.availability_docs`)
 
 ## Success Criteria
 
@@ -142,3 +202,5 @@ If NEEDS DECOMPOSITION: "Decompose into smaller initiatives first"
 - If XL: decomposition strategy provided
 - If XS: explicit instruction to skip epic layer
 - If appropriate size: clear recommendation to proceed
+- Capability & visibility validation performed when `availability_docs` configured - market gates, segment gates, domain-model correctness, visibility rules, unverified claims all checked against the canonical docs
+- Any capability-level scope conflicts flagged with an explicit CAPABILITY-FIX decision (never silent-fixed)

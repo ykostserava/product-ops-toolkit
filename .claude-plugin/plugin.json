@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "product-ops",
-  "version": "0.1.0",
-  "description": "AI-native toolkit for Product Owners, Delivery Managers, and engineering leads. Multi-agent initiative breakdown, PRD generation, codebase research, RAML spec lookup, and a memory-scaffold workflow — all configurable per team.",
+  "version": "0.2.0",
+  "description": "AI-native toolkit for Product Owners, Delivery Managers, and engineering leads. Multi-agent initiative breakdown, PRD generation, codebase research, cross-platform audit workflow, RAML spec lookup, Claude Code rules + hooks, and a memory-scaffold workflow — all configurable per team.",
   "author": {
     "name": "Yauheniya Kostserava",
     "url": "https://github.com/ykostserava"
@@ -18,6 +18,9 @@
     "initiative-breakdown",
     "raml",
     "api-coverage",
+    "cross-platform-audit",
+    "claude-code-rules",
+    "hooks",
     "kanban"
   ]
 }

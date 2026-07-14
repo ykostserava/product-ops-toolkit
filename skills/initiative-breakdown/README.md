@@ -5,10 +5,13 @@ Automatically breaks down initiatives into **feature-based epics**, then into **
 **Key features:**
 - Feature-based epic breakdown (not platform-based)
 - Platform prefixes configurable via `config.yml`
-- Configurable story and task templates
+- Configurable story and task templates (full multi-section format)
 - Component assignment based on platform
 - No story point estimation (left to dev team)
 - 4 specialized agents with approval gates between phases
+- Confidence auto-fill from your Product Brain patterns
+- INVEST scoring, PO auto-review, and optional 8-persona AI review
+- Control manifest as a quality audit trail
 
 ## Quick Start
 
@@ -28,49 +31,53 @@ Automatically breaks down initiatives into **feature-based epics**, then into **
 
 ## What It Does
 
-1. **Analyzes** initiative scope (from Jira or PRD)
-2. **Determines T-shirt size** (XS/S/M/L/XL) and validates scope
-   - XS -> recommends creating Epic only
-   - XL -> recommends decomposition into smaller initiatives
+1. **Loads** your Product Brain context (files listed in `config.yml`)
+2. **Analyzes** initiative scope (from Jira or PRD)
+3. **Determines T-shirt size** (XS/S/M/L/XL) and validates scope
+   - XS -> skips the Epic layer, links stories directly to the Initiative
+   - XL -> stops and recommends decomposition into smaller initiatives
    - S/M/L -> proceeds with breakdown
-3. **Identifies** 3-7 **feature-based** epics (not platform-based)
-4. **Breaks down** each epic into platform-specific stories and tasks using prefixes from `config.yml`
-5. **Generates** full templates (story template, task template)
-6. **Assigns** Jira components (configurable)
-7. **Assigns** priorities (P0/P1/P2 or your scheme)
-8. **Does NOT estimate** story points - left for dev team
-9. **Creates** Jira structure (optional, via `--create-in-jira`)
+   - Optionally validates scope against your availability/visibility docs
+4. **Identifies** 3-7 **feature-based** epics (not platform-based)
+5. **Breaks down** each epic into platform-specific stories and tasks using prefixes from `config.yml`
+6. **Generates** full templates (story template, task template) - every story is a complete standalone document
+7. **Auto-fills** missing sections (errors, edge cases, NFRs, analytics) from your requirements patterns
+8. **Assigns** Jira components and priorities (P0/P1/P2 or your scheme)
+9. **Does NOT estimate** story points - left for dev team
+10. **Validates** quality: INVEST scoring, confidence scores, PO auto-review, optional AI personas review
+11. **Generates** a control manifest (traceability, quality metrics, risks, GO/NO-GO)
+12. **Creates** Jira structure (optional, via `--create-in-jira`)
 
 ## Configuration
 
-Before first use, create `config.yml` next to `SKILL.md`. See the "Setup" section of [SKILL.md](SKILL.md) for the full schema.
+Before first use, create `config.yml` next to `SKILL.md`. See the "Setup" section of [SKILL.md](SKILL.md) for the full schema (product context files, workflow, Jira projects, platform prefixes, templates, constraints).
 
 ## Output
 
 ### Markdown Document
 
-Saved to `docs/breakdowns/[initiative-key]-breakdown.md`
+Saved to `[output.breakdown_dir]/[initiative-key]-breakdown.md`
 
 Contains:
-- Initiative overview
+- Initiative overview and T-shirt size assessment
 - Epic breakdown with descriptions
-- All stories / tasks with acceptance criteria
-- Sprint allocation (if applicable)
+- All stories / tasks with full template sections
+- Execution order (Kanban) or sprint allocation (Scrum)
 - Dependencies and risks
 - Jira links
 
 ### Control Manifest
 
-Saved to `docs/breakdowns/[initiative-key]-control-manifest.md`
+Saved to `[output.breakdown_dir]/[initiative-key]-control-manifest.md`
 
-Quality audit with traceability, INVEST scores, platform coverage, risk assessment, GO/NO-GO recommendation.
+Quality audit with traceability matrix, INVEST scores, confidence scores, platform coverage, risk assessment, dependencies/blockers, and a GO/NO-GO recommendation.
 
 ### Jira Structure
 
 If `--create-in-jira` flag used:
 
 ```
-Initiative (parent)
+Initiative (parent, in the planning project)
 +-- Epic 1
 |   +-- Story 1.1
 |   +-- Story 1.2
@@ -90,6 +97,19 @@ Platforms are configured in `config.yml`. Example:
 | **Task** | Backend, infra, analytics | `[BE] API endpoints`, `[Analytics] Event definitions` |
 | **Tech Task** | Architecture, POCs, DB design | `[BE] Database schema design`, `[BE] Caching strategy POC` |
 
+**CRITICAL:** all summaries must carry a platform prefix.
+
+## Quality Gates
+
+The final quality gate combines:
+
+- **PO Auto-Review** - structure checks: prefixes, template completeness, links, components, priorities, empty story points
+- **INVEST validation** - each story scored 0-6 across Independent/Negotiable/Valuable/Estimable/Small/Testable; <5.0 blocks creation
+- **Confidence scores** - sections filled vs template; <90% flags a story for review
+- **AI Personas review (optional)** - 8 domain reviewers (BA, Requirements Engineer, Architect, QA, PM, UX, Compliance, DevOps) validate content quality
+
+Issues are flagged with fixes offered before anything is created in Jira.
+
 ## Options
 
 | Flag | Description |
@@ -104,6 +124,7 @@ Platforms are configured in `config.yml`. Example:
 - Review dependencies before creating in Jira
 - Link to designs / PRDs in epic descriptions
 - Update breakdown as scope changes
+- Invest in your Product Brain files - auto-fill quality depends on them
 
 ## Estimated Time Saved
 
@@ -122,5 +143,5 @@ Time saved scales with frequency - a PO doing 4-5 breakdowns per month recovers 
 
 - [SKILL.md](SKILL.md) - full orchestration logic
 - `agents/` - the 4 specialized agent definitions
-- `patterns/` - reference patterns used by the breakdown
+- `patterns/` - reference patterns used by the breakdown (including AI personas)
 - `templates/` - control manifest template

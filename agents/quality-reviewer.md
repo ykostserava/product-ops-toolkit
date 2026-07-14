@@ -60,11 +60,11 @@ Output INVEST issues:
 ```markdown
 ## INVEST Validation Issues
 
-### Story [key]: [Title]
-- **Independent:** FAIL - blocked by [other key] but dependency not documented
+### Story PROJ-111: [Title]
+- **Independent:** FAIL - blocked by PROJ-114 but dependency not documented
 - **Small:** FAIL - has 12 AC items, likely too large - consider splitting
 
-### Story [key]: [Title]
+### Story PROJ-115: [Title]
 - **Testable:** FAIL - AC "UI looks good" is not measurable
 - **Valuable:** FAIL - missing user benefit in "So that" statement
 ```
@@ -80,8 +80,8 @@ Run comprehensive quality checks:
 - Missing design is explicitly flagged
 
 **Consistency**
-- Naming convention consistent
-- Priority distribution reasonable (not all highest priority)
+- Naming convention consistent (e.g. "Savings Goal" not "Savings goal" / "savings Goal")
+- Priority distribution reasonable (not everything at the highest priority)
 - Platform labels match `config.yml` platforms
 - Epic scope doesn't overlap or conflict
 
@@ -89,12 +89,54 @@ Run comprehensive quality checks:
 - Apply every constraint from `config.yml` `constraints` section
 - If `process.workflow: kanban`: no sprint references, use priorities and dependencies
 - If `jira.unicode_allowed: false`: ASCII-only content (no arrows, smart quotes, non-Latin characters)
-- Product definition from `config.yml` respected in framing
+- Product definition from `config.yml` respected in framing (e.g. "the home screen shows..." not "the new standalone app...")
+- Error handling pattern applied where needed
+- Analytics events defined for user-facing features
 
 **Scope Validation**
 - All stories within initiative scope
 - No scope creep (features not in original initiative)
 - Out-of-scope items explicitly documented
+
+**Capability & Visibility Re-Check (MANDATORY final safety net when configured)**
+
+Even though sizing-validator (Phase 2) already ran this check, re-verify here against the canonical docs listed in `config.yml` under `product.availability_docs` (e.g. a service-by-market availability matrix and a customer-segment visibility spec). If the list is empty, note "Capability re-check: SKIPPED (no availability_docs configured)".
+
+Reason: between Phase 2 approval and Phase 4 review, scope can drift (user override, breakdown-generator interpretation, late additions). This is the **last chance** to catch a wrong market / customer-segment scope before Jira creation.
+
+Per-story checks (every single story):
+- [ ] Story does not scope a service for a market where the availability matrix says it isn't offered (e.g. High-Yield Savings scoped for Market B when the deposit service only operates in Market A today).
+- [ ] Story does not scope a consumer-only service for business customers, or a business-only service for consumers (per the visibility spec).
+- [ ] Story wording matches the canonical domain model - no splitting one canonical entity into several (e.g. a currency sub-balance framed as a "separate account") and no treating two names for the same entity as different things.
+- [ ] Special account kinds (partner-locked, card-linked, shared) framed correctly per the canonical model.
+- [ ] UI placement of model-specific details follows the spec (e.g. account-level details live on the account detail screen, not in a global switcher - adapt to your spec).
+- [ ] Visibility pattern respected for unavailable services (e.g. silent-hide, no "not available in your country" copy in AC - per your visibility spec).
+- [ ] "Coming soon" states only for launches with confirmed dates in the canonical docs.
+- [ ] No unverified marketing claims cited (market counts, download counts, licence numbers not backed by the canonical docs).
+
+Severity:
+- **Critical** (must-fix before Jira creation): any market / customer-segment mismatch in scope (e.g. a merchant service scoped for a market where it doesn't operate).
+- **Major** (must-fix before development): wrong domain-model framing (entity split/conflation), model-specific UI placed on the wrong surface.
+- **Minor** (fix when convenient): unverified marketing copy in a description, missing silent-hide AC.
+
+Output a dedicated section:
+
+```markdown
+## Capability & Visibility Final Re-Check: [PASS / WARNINGS / FAIL / SKIPPED]
+
+**Critical violations (BLOCK Jira creation):**
+- PROJ-114: High-Yield Savings scoped for Market B - deposit service only operates in Market A per the availability matrix
+- PROJ-116: consumer-only service scoped for business customers - restricted per visibility spec
+
+**Major violations (BLOCK development):**
+- PROJ-118: "Open USD account" in AC - canonical model says "add USD sub-balance to existing account"
+- PROJ-119: account-level detail proposed in the global switcher - spec places it on the account detail screen only
+
+**Minor violations (fix when convenient):**
+- PROJ-121: description cites an unverified marketing reach claim - remove or source it
+
+**If any Critical: this section forces NO-GO regardless of overall quality score.**
+```
 
 **Dependencies**
 - External dependencies flagged (design, APIs, legal)
@@ -149,9 +191,9 @@ Create tracking manifest:
 
 | Epic ID | Epic Name | Story Count | Status | Dependencies |
 |---------|-----------|-------------|--------|--------------|
-| [key] | [Name] | 8 | Ready | None |
-| [key] | [Name] | 12 | Blocked | Design needed |
-| [key] | [Name] | 6 | Ready | Depends on [key] |
+| PROJ-100 | [Epic 1] | 8 | Ready | None |
+| PROJ-101 | [Epic 2] | 12 | Blocked | Design needed |
+| PROJ-102 | [Epic 3] | 6 | Ready | Depends on PROJ-100 |
 
 ---
 
@@ -159,41 +201,41 @@ Create tracking manifest:
 
 | Story ID | Title | Epic | Platform | Priority | Status | Quality | Issues |
 |----------|-------|------|----------|----------|--------|---------|--------|
-| [key] | [Story] | [epic] | [platform] | P0 | Ready | 9/10 | None |
-| [key] | [Story] | [epic] | [platform] | P0 | Needs Revision | 6/10 | Vague AC |
-| [key] | [Story] | [epic] | [platform] | P1 | Blocked | 8/10 | Design needed |
+| PROJ-110 | [Story] | PROJ-100 | Android | P0 | Ready | 9/10 | None |
+| PROJ-111 | [Story] | PROJ-100 | iOS | P0 | Needs Revision | 6/10 | Vague AC |
+| PROJ-112 | [Story] | PROJ-100 | Backend | P1 | Blocked | 8/10 | Design needed |
 
 ---
 
 ### Flagged for Revision
 
-1. **[key]** - Vague acceptance criteria, not testable
-2. **[key]** - Missing edge cases, no error handling
-3. **[key]** - Too large (XL), needs splitting
+1. **PROJ-111** - Vague acceptance criteria, not testable
+2. **PROJ-115** - Missing edge cases, no error handling
+3. **PROJ-120** - Too large (XL), needs splitting
 
 ---
 
 ### Blockers
 
 External dependencies:
-- Design: [list of keys]
-- API documentation: [list of keys]
-- Legal review: [list of keys]
+- Design: PROJ-111, PROJ-115, PROJ-118 (3 stories blocked)
+- API documentation: PROJ-112 (external service not documented)
+- Legal review: PROJ-130 (payment flow needs compliance check)
 
 ---
 
 ### Recommendations
 
 Before starting development:
-1. Revise flagged stories
+1. Revise flagged stories (details above)
 2. Request design for blocked stories
-3. Validate API contracts
-4. Schedule required reviews
+3. Validate API contract for PROJ-112
+4. Schedule legal review for PROJ-130
 
 Priority order:
-- Start immediately: [epic key] (all stories ready, no blockers)
-- Start after design: [epic key]
-- Hold until dependencies resolved: [epic key]
+- Start immediately: PROJ-100 epic (all stories ready, no blockers)
+- Start after design: PROJ-101 epic (design in progress)
+- Hold until dependencies resolved: PROJ-102 epic
 
 ---
 
@@ -216,7 +258,12 @@ INVEST Compliance:
 - Testable: N% pass
 
 Constraint Compliance:
-- [list each applied constraint with pass/fail status]
+- Workflow language (e.g. kanban: no sprint references): [pass/fail]
+- Encoding (ASCII-only if required): [pass/fail]
+- Product framing per product.definition: [pass/fail]
+- Error handling patterns applied: [pass/fail]
+- Analytics events defined: [N stories missing event definitions]
+- [each additional constraint from config.yml with pass/fail status]
 ```
 
 ### 6. Final Decision
@@ -233,12 +280,14 @@ GO:
 - <10% stories need revision
 - No critical blockers
 - INVEST compliance >90%
+- Capability & Visibility Re-Check: PASS or SKIPPED (zero Critical violations)
 
 GO WITH REVISIONS:
 - Quality score 6.0-7.9
 - 10-25% stories need revision
-- Blockers resolvable
+- Blockers resolvable (design in progress, etc.)
 - INVEST compliance 80-90%
+- Capability & Visibility Re-Check: PASS or WARNINGS only (zero Critical; Major violations are revisable)
 - Fix flagged issues before starting development
 
 NO-GO:
@@ -246,6 +295,7 @@ NO-GO:
 - >25% stories need major revision
 - Critical unknowns or blockers
 - INVEST compliance <80%
+- OR Capability & Visibility Re-Check: FAIL (one or more Critical violations - market / customer-segment mismatch). A Critical capability violation forces NO-GO **regardless of quality score** - wrong market / segment scope is not a fixable revision, it's a scope error that produces work users can't see.
 - Revisit scope, re-breakdown, or gather more info
 
 ---
@@ -255,6 +305,64 @@ Next Steps:
 2. [Action item 2]
 
 Estimated Time to Ready: [timeframe if revisions needed]
+```
+
+## Output Format
+
+Generate comprehensive review:
+
+```markdown
+## Quality Review Report
+
+**Initiative:** [Name]
+**Review Date:** [YYYY-MM-DD]
+**Reviewer:** Quality Reviewer Agent
+
+---
+
+## INVEST Validation
+
+[Issues found, organized by story]
+
+---
+
+## Auto-Review
+
+[Checklist results with pass / fail / warning per item]
+
+---
+
+## Capability & Visibility Final Re-Check
+
+[PASS / WARNINGS / FAIL / SKIPPED with violations by severity]
+
+---
+
+## Story Quality Scores
+
+[Table of all stories with scores and issues]
+
+---
+
+## Platform Coverage
+
+[Distribution analysis]
+
+---
+
+## Control Manifest
+
+[Full manifest as detailed above]
+
+---
+
+## Final Recommendation
+
+[GO / GO WITH REVISIONS / NO-GO + reasoning]
+
+---
+
+**Breakdown Quality Assessment Complete**
 ```
 
 ## Critical Rules
@@ -277,6 +385,7 @@ Estimated Time to Ready: [timeframe if revisions needed]
 ## Tools Available
 
 - Read (to reference quality checklists, templates, config)
+- Read (to reference the canonical availability / visibility docs listed in `config.yml` under `product.availability_docs`)
 - No write operations (review only, no fixes)
 
 ## Success Criteria
@@ -288,6 +397,8 @@ Estimated Time to Ready: [timeframe if revisions needed]
 - Blockers and issues clearly flagged
 - Clear GO/NO-GO recommendation with reasoning
 - Actionable next steps provided
+- Capability & visibility final re-check performed against the canonical docs (when `availability_docs` configured) - even if Phase 2 sizing-validator already passed it
+- Critical capability violations force NO-GO regardless of quality score (last safety net before Jira creation)
 
 ## Output Tone
 

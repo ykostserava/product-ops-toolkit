@@ -18,16 +18,44 @@ Built by a PM who got tired of doing the same Jira-shaped rituals by hand, autom
 - **[codebase-research](skills/codebase-research/)** -- multi-platform codebase audit. Inventories backend endpoints, traces them across iOS / Android / web, and produces a PO-ready coverage matrix with gaps and drift. Includes 4 stdlib-only Python scripts.
 - **[raml-api-spec-search](skills/raml-api-spec-search/)** -- producer-side spec lookup against a central RAML repo (GitLab / GitHub). Pairs with `codebase-research` for spec-vs-implementation gap analysis.
 - **[multi-agent](skills/multi-agent/)** -- generic 4-layer orchestration pattern (proposal -> design -> specs -> tasks).
+- **[writing-claude-code-rules](skills/writing-claude-code-rules/)** -- how to structure Claude Code instructions: CLAUDE.md vs `.claude/rules/` vs skills vs hooks, path-scoping, and why rules get ignored. Pairs with `rules/`.
 
 ### Agents
 
-`agents/` -- Claude Code subagent definitions used by `initiative-breakdown` (and reusable on their own):
+`agents/` -- Claude Code subagent definitions used by the skills (and reusable on their own).
+
+Breakdown pipeline (used by `initiative-breakdown`):
 
 - `product-brain-loader` -- loads product context, templates, and constraints from your memory/ knowledge base
 - `sizing-validator` -- T-shirt sizing (XS/S/M/L/XL) with scope validation
 - `breakdown-generator` -- generates epics and stories using configured templates
 - `quality-reviewer` -- INVEST validation + PO auto-review + control manifest
 - `mobile-delivery-agent` -- specialized assistant for mobile delivery managers; team-level patterns, release cycles, store constraints
+
+Audit fleet (used by the `cross-platform-audit` workflow):
+
+- `ios-auditor` / `android-auditor` / `web-auditor` -- read-only consumer-side auditors: endpoint call sites, UI patterns, analytics events, tracking gaps per platform
+- `backend-auditor` -- producer-side auditor: exposed endpoints, auth, DTO shapes, owner teams, spec drift
+- `audit-coordinator` -- joins the per-platform JSON into a coverage matrix with orphan/phantom endpoints, UI parity, and event-name drift
+
+### Workflows
+
+`workflows/` -- deterministic multi-agent orchestration scripts for Claude Code's Workflow engine:
+
+- **[cross-platform-audit.js](workflows/cross-platform-audit.js)** -- launches one read-only auditor per platform in parallel, adversarially spot-checks each audit's cited file:line references, then merges verified findings into a PO-ready coverage matrix. Point `args.repos` at your checkouts and go.
+
+### Rules
+
+`rules/` -- the `.claude/rules/` approach to project instructions: one constraint per small file, path-scoped where possible, indexed from CLAUDE.md. Ships a README with the method and four example rules (team process, issue-tracker hygiene, API access, doc output) distilled from a real product-team setup. See `rules/README.md`.
+
+### Hooks
+
+`hooks/` -- hard guarantees enforced by the Claude Code harness (rules are guidance; hooks are enforcement):
+
+- `secret_scan.py` -- blocks `git commit` when gitleaks finds a secret in the staged diff (fails open if gitleaks isn't installed)
+- `guard_env.py` -- blocks Claude from writing/editing `.env*` files
+
+Wiring instructions in `hooks/README.md`.
 
 ### Memory scaffold
 
