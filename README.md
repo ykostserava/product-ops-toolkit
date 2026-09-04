@@ -18,7 +18,12 @@ Built by a PM who got tired of doing the same Jira-shaped rituals by hand, autom
 - **[codebase-research](skills/codebase-research/)** -- multi-platform codebase audit. Inventories backend endpoints, traces them across iOS / Android / web, and produces a PO-ready coverage matrix with gaps and drift. Includes 4 stdlib-only Python scripts.
 - **[raml-api-spec-search](skills/raml-api-spec-search/)** -- producer-side spec lookup against a central RAML repo (GitLab / GitHub). Pairs with `codebase-research` for spec-vs-implementation gap analysis.
 - **[multi-agent](skills/multi-agent/)** -- generic 4-layer orchestration pattern (proposal -> design -> specs -> tasks).
+- **[grill-me](skills/grill-me/)** -- relentless design-tree interview: asks the whole frontier of open decisions per round, each with a recommended answer, looks facts up itself and puts only decisions to you; closes with a Settled list that tells your own rulings from accepted recommendations. User-invoked only.
+- **[to-questionnaire](skills/to-questionnaire/)** -- turns a decision you cannot settle alone into an async discovery questionnaire for one named person; interviews you only about the send (who, what back), never about the subject. Writes one file, sends nothing.
+- **[handoff](skills/handoff/)** -- compacts the session into a document a fresh session can resume from: where the work is, what is verified, decisions with their author, dead ends, dangers, suggested skills. Plan, audit and execution as different sessions.
 - **[writing-claude-code-rules](skills/writing-claude-code-rules/)** -- how to structure Claude Code instructions: CLAUDE.md vs `.claude/rules/` vs skills vs hooks, path-scoping, and why rules get ignored. Pairs with `rules/`.
+
+The three interview/handoff skills are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT); each carries a `NOTICE.md`.
 
 ### Agents
 
