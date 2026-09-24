@@ -1,4 +1,5 @@
 ---
+name: product-analytics
 description: Product Analytics - analyze GA4 / Firebase / PostHog data, generate insights, track metric history, create reports
 ---
 

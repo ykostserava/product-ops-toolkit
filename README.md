@@ -26,6 +26,8 @@ Built by a PM who got tired of doing the same Jira-shaped rituals by hand, autom
 - **[dup-check](skills/dup-check/)** -- "do we already have this?" with evidence: TF-IDF shortlist over the whole project (closed issues included, `scripts/duplicate_scan.py`) plus a judged duplicate / overlaps / distinct verdict. Read-only.
 - **[prioritize](skills/prioritize/)** -- a ranked, readiness-aware queue for an initiative or the whole roadmap: the `po-prioritizer` agent grades every story against 4 Definition-of-Ready gates (design graded, not hard-blocked; AC/INVEST; dependencies; estimate + open questions), ranks by V x R x U, and prints the exact "what's missing" list. Propose-only; with `--apply`, transitions and size labels go through per-item gates.
 - **[whats-next](skills/whats-next/)** -- "what should this dev pull next?": their own unfinished work first, then the best READY story matching their components, with the why. Read-only.
+- **[pre-mr](skills/pre-mr/)** -- the gate before anything goes to review: deterministic checks, boundary tables for pure functions, a constant-mutation sweep (`skills/pre-mr/scripts/mutate_constants.py` reports every numeric literal the tests do not pin), an adversarial fresh-context review, a claims audit of the MR text, and a content-digest marker that `hooks/guard_pre_mr.py` enforces on `git push`.
+- **[audit](skills/audit/)** -- panel of three blind auditors (money and spend; failures, time and concurrency; definitions and boundaries), three different models, each reading the design document and the code itself. For schemes where a mistake costs a rewrite. User-invoked only.
 - **[followups](skills/followups/)** -- dated, person-addressed follow-ups in one registry (`scripts/followups.py`): aging view, sync from your notes with per-item approval, ping drafts that are never sent by the tool, and a cooldown so nobody gets nagged twice.
 - **[writing-claude-code-rules](skills/writing-claude-code-rules/)** -- how to structure Claude Code instructions: CLAUDE.md vs `.claude/rules/` vs skills vs hooks, path-scoping, and why rules get ignored. Pairs with `rules/`.
 
@@ -42,6 +44,10 @@ Breakdown pipeline (used by `initiative-breakdown`):
 - `breakdown-generator` -- generates epics and stories using configured templates
 - `quality-reviewer` -- INVEST validation + PO auto-review + control manifest
 - `mobile-delivery-agent` -- specialized assistant for mobile delivery managers; team-level patterns, release cycles, store constraints
+
+Blind-auditor panel (used by `audit`):
+
+- `auditor-money` / `auditor-failures` / `auditor-definitions` -- read-only, three different models, no retelling accepted; `tests/test_toolkit_config.py` keeps them read-only and distinct
 
 Board operations (used by `board-sync`):
 
@@ -62,7 +68,7 @@ Audit fleet (used by the `cross-platform-audit` workflow):
 
 ### Rules
 
-`rules/` -- the `.claude/rules/` approach to project instructions: one constraint per small file, path-scoped where possible, indexed from CLAUDE.md. Ships a README with the method and four example rules (team process, issue-tracker hygiene, API access, doc output) distilled from a real product-team setup. See `rules/README.md`.
+`rules/` -- the `.claude/rules/` approach to project instructions: one constraint per small file, path-scoped where possible, indexed from CLAUDE.md. Ships a README with the method and seven example rules (team process, issue-tracker hygiene, API access, doc output, file placement, the blind-auditor panel, mechanics over promises) distilled from a real product-team setup. See `rules/README.md`.
 
 ### Hooks
 
@@ -70,6 +76,8 @@ Audit fleet (used by the `cross-platform-audit` workflow):
 
 - `secret_scan.py` -- blocks `git commit` when gitleaks finds a secret in the staged diff (fails open if gitleaks isn't installed)
 - `guard_env.py` -- blocks Claude from writing/editing `.env*` files
+- `guard_pre_mr.py` + `pre_mr_marker.py` -- blocks `git push` to a review branch unless the `/pre-mr` gate marker covers the current tree (content digest, not HEAD); docs-only branches and an explicit bypass pass
+- `model_staleness.py` -- SessionStart reminder to verify model ids, API shapes and flags against current docs instead of training data
 - `guard_jira_ascii.py` -- blocks a shell command that sends a non-ASCII payload to a Jira/Confluence host (a corporate WAF may 400 on it); local work that merely mentions the host is untouched. Ships with its test
 
 Wiring instructions in `hooks/README.md`.

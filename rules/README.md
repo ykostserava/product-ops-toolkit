@@ -38,6 +38,9 @@ Detailed rules live in `.claude/rules/`:
 | `issue-tracker.md` | API hygiene, priority defaults, scope confirmation |
 | `api-access.md` | Credential lookup order, fail-fast on auth errors |
 | `doc-output.md`  | Output standards for docs (path-scoped to docs/) |
+| `file-placement.md` | Where new files go; frozen paths |
+| `audit-panel.md` | Three blind auditors before code on a new scheme |
+| `mechanics-over-promises.md` | Rules need tests/hooks/gates, not prose |
 ```
 
 ## Example rules
@@ -48,6 +51,9 @@ Detailed rules live in `.claude/rules/`:
 | `examples/issue-tracker.md` | unconditional | API hygiene + defaults + a confirm-before-create gate for issue trackers |
 | `examples/api-access.md` | unconditional | credential lookup order and a fail-fast policy for flaky internal APIs |
 | `examples/doc-output.md` | `paths:`-scoped | output standards that load only when writing documentation files |
+| `examples/file-placement.md` | unconditional | a routing table for new files so nothing lands loose in the root, plus the frozen paths automation depends on |
+| `examples/audit-panel.md` | unconditional | when a design gets three blind auditors before code, and the test that keeps the panel honest |
+| `examples/mechanics-over-promises.md` | unconditional | the meta-rule: a rule ships with a test, hook or gate in the same commit - with the acceptance, quality and budget conventions that follow from it |
 
 Each example is deliberately short. A rule that needs 200 lines is usually a skill
 (procedure) or a hook (guarantee) in disguise — see the decision table in

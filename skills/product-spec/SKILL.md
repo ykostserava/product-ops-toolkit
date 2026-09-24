@@ -1,5 +1,6 @@
 ---
-description: Generate Product Requirements Document for a feature
+name: product-spec
+description: Generate a Product Requirements Document for a feature - interactive PRD writer that reads your memory/ product context and fills the bundled PRD template section by section. Triggers on "write a PRD", "product spec", "spec this feature".
 ---
 
 # Product Spec Generator

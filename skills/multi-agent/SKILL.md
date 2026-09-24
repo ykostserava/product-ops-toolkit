@@ -1,3 +1,8 @@
+---
+name: multi-agent
+description: Orchestrate multi-agent collaboration in structured layers (proposal -> design -> specs -> tasks), with specialized agents per phase. Use to break a complex project into executable, layered work.
+---
+
 # multi-agent
 
 Think in layers:

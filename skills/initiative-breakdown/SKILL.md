@@ -1,4 +1,5 @@
 ---
+name: initiative-breakdown
 description: Multi-agent initiative breakdown - orchestrates 4 specialized agents across explicit phases with approval gates
 ---
 
