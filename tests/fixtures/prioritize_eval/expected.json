@@ -22,7 +22,7 @@
     {"key": "PROJ-511", "state": "READY", "score": 2.0,
      "why": "TRAP resolved-OQ: description carries an OQ-1 marker but the same line says RESOLVED - the exclusion rule applies, gate iv passes; BE-only design N/A; 2 x 1.0"},
     {"key": "PROJ-512", "state": "READY", "score": 2.0,
-     "why": "TRAP figma-fallback: user-visible iOS story with NO DSGN link, but remotelinks has a design URL -> design GREEN per the gate table, not RED; 2 x 1.0"},
+     "why": "TRAP design-url-fallback: user-visible iOS story with NO DSGN link, but remotelinks has a design URL -> design GREEN per the gate table, not RED; 2 x 1.0"},
     {"key": "PROJ-513", "state": "BLOCKED", "score": 0.3,
      "why": "TRAP flag-not-links: no blocked-by links and everything else green, but Flagged (customfield_10990) is set -> impediment fails gate iii -> BLOCKED; 3 x 0.1"},
     {"key": "PROJ-514", "state": "READY", "score": 1.0,
