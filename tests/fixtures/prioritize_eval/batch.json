@@ -1,0 +1,102 @@
+{
+  "_comment": "FROZEN jira_batch_fetch --trim readiness output for the eval spine. Estimates live in description ('Estimate: X') because the readiness trim carries no labels field. PROJ-501..508 frozen 2026-08-17; adversarial PROJ-510..515 added 2026-08-21 (PROJ-512 carries the remotelinks Figma-fallback payload).",
+  "meta": {
+    "keys": ["PROJ-501", "PROJ-502", "PROJ-503", "PROJ-504", "PROJ-505", "PROJ-506", "PROJ-507", "PROJ-508", "PROJ-510", "PROJ-511", "PROJ-512", "PROJ-513", "PROJ-514", "PROJ-515"],
+    "commands": ["get", "links", "comments", "remotelinks"],
+    "trim": "readiness",
+    "errors": []
+  },
+  "issues": {
+    "PROJ-501": {
+      "get": {"key": "PROJ-501", "fields": {"summary": "Home screen quick actions bar (iOS)", "description": "Add the quick actions bar to the Home screen screen.\n\nEstimate: S", "customfield_10097": "Given a logged-in user on Home screen\nWhen the screen loads\nThen the quick actions bar renders with Top up, Transfer, Scan actions\nAnd tapping an action opens the matching flow", "customfield_10990": null, "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "High"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "iOS"}], "issuelinks": []}},
+      "links": [
+        {"direction": "outward", "type": {"name": "Relate", "inward": "relates to", "outward": "relates to"}, "description": "relates to", "issue": {"key": "DSGN-601", "fields": {"summary": "Quick actions bar design", "status": {"name": "Done", "statusCategory": {"key": "done", "name": "Done"}}, "issuetype": {"name": "Design"}, "priority": {"name": "Medium"}}}},
+        {"direction": "outward", "type": {"name": "Block", "inward": "is blocked by", "outward": "blocks"}, "description": "blocks", "issue": {"key": "PROJ-505", "fields": {"summary": "Quick actions config endpoint", "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "issuetype": {"name": "Task"}, "priority": {"name": "High"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-502": {
+      "get": {"key": "PROJ-502", "fields": {"summary": "Home screen recent transactions widget (Android)", "description": "Show the 3 latest transactions on Home screen.\n\nEstimate: M", "customfield_10097": "Given a user with transactions\nWhen Home screen loads\nThen the 3 latest transactions render with amount and counterparty\nAnd tapping one opens its details", "customfield_10990": null, "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "Android"}], "issuelinks": []}},
+      "links": [
+        {"direction": "outward", "type": {"name": "Relate", "inward": "relates to", "outward": "relates to"}, "description": "relates to", "issue": {"key": "DSGN-602", "fields": {"summary": "Recent transactions widget design", "status": {"name": "In Progress", "statusCategory": {"key": "indeterminate", "name": "In Progress"}}, "issuetype": {"name": "Design"}, "priority": {"name": "Medium"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-503": {
+      "get": {"key": "PROJ-503", "fields": {"summary": "Cashflow aggregation endpoint", "description": "Aggregate monthly cashflow per account for the home widget.\n\nEstimate: S", "customfield_10097": "Given an account with transactions in the current month\nWhen GET /cashflow is called\nThen income and expense totals are returned per currency", "customfield_10990": null, "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "High"}, "issuetype": {"name": "Task"}, "assignee": null, "components": [{"name": "Backend"}], "issuelinks": []}},
+      "links": [
+        {"direction": "inward", "type": {"name": "Block", "inward": "is blocked by", "outward": "blocks"}, "description": "is blocked by", "issue": {"key": "PROJ-509", "fields": {"summary": "Transactions read model migration", "status": {"name": "In progress", "statusCategory": {"key": "indeterminate", "name": "In Progress"}}, "issuetype": {"name": "Task"}, "priority": {"name": "High"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-504": {
+      "get": {"key": "PROJ-504", "fields": {"summary": "Home web account selector", "description": "Account selector for the web wallet page.\n\nEstimate: M", "customfield_10097": "Given a user with multiple accounts\nWhen the wallet page loads\nThen the selector lists all accounts with balances\nAnd selecting one switches the page context", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "Web"}], "issuelinks": []}},
+      "links": [
+        {"direction": "outward", "type": {"name": "Relate", "inward": "relates to", "outward": "relates to"}, "description": "relates to", "issue": {"key": "DSGN-604", "fields": {"summary": "Web account selector design", "status": {"name": "To Do", "statusCategory": {"key": "new", "name": "To Do"}}, "issuetype": {"name": "Design"}, "priority": {"name": "Medium"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-505": {
+      "get": {"key": "PROJ-505", "fields": {"summary": "Quick actions config endpoint", "description": "Serve the quick actions configuration for mobile clients.", "customfield_10097": "Given a mobile client\nWhen GET /home/quick-actions is called\nThen the enabled actions are returned in display order", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "High"}, "issuetype": {"name": "Task"}, "assignee": null, "components": [{"name": "Backend"}], "issuelinks": []}},
+      "links": [],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-506": {
+      "get": {"key": "PROJ-506", "fields": {"summary": "Home screen privacy toggle (iOS)", "description": "Hide balances behind a privacy toggle.\n\nEstimate: S", "customfield_10097": "Given a user on Home screen\nWhen the privacy toggle is tapped\nThen all balances render masked\nAnd the preference persists across sessions", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "iOS"}], "issuelinks": []}},
+      "links": [],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-507": {
+      "get": {"key": "PROJ-507", "fields": {"summary": "Home screen services reorder (Android)", "description": "Let the user reorder service shortcuts.\n\nEstimate: M\n\nOQ-1: to confirm with BE whether the order is stored server-side or locally.", "customfield_10097": "Given a user in edit mode\nWhen a shortcut is dragged to a new position\nThen the new order persists\nAnd the order applies on next app start", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Low"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "Android"}], "issuelinks": []}},
+      "links": [
+        {"direction": "outward", "type": {"name": "Relate", "inward": "relates to", "outward": "relates to"}, "description": "relates to", "issue": {"key": "DSGN-607", "fields": {"summary": "Services reorder design", "status": {"name": "Done", "statusCategory": {"key": "done", "name": "Done"}}, "issuetype": {"name": "Design"}, "priority": {"name": "Low"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-508": {
+      "get": {"key": "PROJ-508", "fields": {"summary": "Home capabilities endpoint contract", "description": "Serve the service-availability enum for the home screen.\n\nEstimate: L", "customfield_10097": "Given an authenticated user\nWhen GET /home/capabilities is called\nThen each service returns available, locked or hidden\nAnd the response carries no translations", "customfield_10990": null, "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Task"}, "assignee": null, "components": [{"name": "Backend"}], "issuelinks": []}},
+      "links": [],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-510": {
+      "get": {"key": "PROJ-510", "fields": {"summary": "Home screen currency switcher (Android)", "description": "Let the user switch the display currency on Home screen.\n\nEstimate: S", "customfield_10097": "The switcher works correctly on all supported devices and looks good in both themes.", "customfield_10990": null, "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "High"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "Android"}], "issuelinks": []}},
+      "links": [
+        {"direction": "outward", "type": {"name": "Relate", "inward": "relates to", "outward": "relates to"}, "description": "relates to", "issue": {"key": "DSGN-610", "fields": {"summary": "Currency switcher design", "status": {"name": "Done", "statusCategory": {"key": "done", "name": "Done"}}, "issuetype": {"name": "Design"}, "priority": {"name": "Medium"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-511": {
+      "get": {"key": "PROJ-511", "fields": {"summary": "Shortcut order persistence endpoint", "description": "Persist the user's service-shortcut order.\n\nEstimate: S\n\nOQ-1: store the order server-side or locally? - RESOLVED 2026-08-14: server-side, per BE sync.", "customfield_10097": "Given a user with a custom shortcut order\nWhen PUT /home/shortcut-order is called\nThen the order persists per user\nAnd GET returns it in the stored sequence", "customfield_10990": null, "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Task"}, "assignee": null, "components": [{"name": "Backend"}], "issuelinks": []}},
+      "links": [],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-512": {
+      "get": {"key": "PROJ-512", "fields": {"summary": "Home screen balance card redesign (iOS)", "description": "Apply the refreshed balance card layout.\n\nEstimate: M", "customfield_10097": "Given a user on Home screen\nWhen the screen loads\nThen the balance card renders per the approved Figma layout\nAnd the currency amount uses the new typography scale", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "iOS"}], "issuelinks": []}},
+      "links": [],
+      "comments": {"total": 0, "comments": []},
+      "remotelinks": [
+        {"url": "https://design.example.com/file/aB3cD4eF/home-balance-card?node-id=210-4411", "title": "Balance card - final layout"}
+      ]
+    },
+    "PROJ-513": {
+      "get": {"key": "PROJ-513", "fields": {"summary": "Home widgets config endpoint", "description": "Serve the widget configuration for the home screen.\n\nEstimate: M", "customfield_10097": "Given an authenticated user\nWhen GET /home/widgets is called\nThen the enabled widgets are returned in display order\nAnd disabled widgets are omitted", "customfield_10990": [{"value": "Impediment"}], "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "High"}, "issuetype": {"name": "Task"}, "assignee": null, "components": [{"name": "Backend"}], "issuelinks": []}},
+      "links": [],
+      "comments": {"total": 1, "comments": [{"author": "PO", "created": "2026-08-18T10:00:00.000+0200", "body": "Flagged: waiting for the infra team's schema migration window."}]}
+    },
+    "PROJ-514": {
+      "get": {"key": "PROJ-514", "fields": {"summary": "Home screen pull-to-refresh (Android)", "description": "Add pull-to-refresh to the Home screen screen.\n\nEstimate: S", "customfield_10097": "Given a user on Home screen\nWhen they pull down\nThen balances and the tx widget reload\nAnd a spinner shows until data arrives", "customfield_10990": null, "status": {"name": "Ready for Dev", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Low"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "Android"}], "issuelinks": []}},
+      "links": [
+        {"direction": "outward", "type": {"name": "Relate", "inward": "relates to", "outward": "relates to"}, "description": "relates to", "issue": {"key": "DSGN-614", "fields": {"summary": "Pull-to-refresh interaction design", "status": {"name": "Done", "statusCategory": {"key": "done", "name": "Done"}}, "issuetype": {"name": "Design"}, "priority": {"name": "Low"}}}},
+        {"direction": "inward", "type": {"name": "Block", "inward": "is blocked by", "outward": "blocks"}, "description": "is blocked by", "issue": {"key": "PROJ-516", "fields": {"summary": "Home data-layer refresh hooks", "status": {"name": "Closed", "statusCategory": {"key": "done", "name": "Done"}}, "issuetype": {"name": "Task"}, "priority": {"name": "Medium"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    },
+    "PROJ-515": {
+      "get": {"key": "PROJ-515", "fields": {"summary": "Home screen promo banner slot (iOS)", "description": "Add the dismissible promo banner slot to Home screen.\n\nEstimate: M\n\nOQ-1: to confirm with compliance whether promo content needs per-country gating.", "customfield_10097": "Given an active promo campaign\nWhen Home screen loads\nThen the banner renders in the slot below the balance card\nAnd dismissing it hides the campaign permanently for the user", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "iOS"}], "issuelinks": []}},
+      "links": [
+        {"direction": "outward", "type": {"name": "Relate", "inward": "relates to", "outward": "relates to"}, "description": "relates to", "issue": {"key": "DSGN-615", "fields": {"summary": "Promo banner slot design", "status": {"name": "In Progress", "statusCategory": {"key": "indeterminate", "name": "In Progress"}}, "issuetype": {"name": "Design"}, "priority": {"name": "Medium"}}}}
+      ],
+      "comments": {"total": 0, "comments": []}
+    }
+  }
+}

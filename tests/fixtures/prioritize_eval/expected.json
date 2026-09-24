@@ -1,0 +1,33 @@
+{
+  "_comment": "Golden roll-ups for the eval spine. Score = V x R x U per the agent doc: V High=3/Medium=2/Low=1; R READY=1.0/PARALLEL-OK=0.7/NEEDS-GROOMING=0.4/BLOCKED=0.1; U = 1 + 0.2 per not-done in-scope item this story blocks. Score tolerance +-0.05. PROJ-501..508 = the state matrix; PROJ-510..515 = adversarial traps, each named in its why.",
+  "items": [
+    {"key": "PROJ-501", "state": "READY", "score": 3.6,
+     "why": "design GREEN (DSGN-601 Done), AC solid GWT, no blockers, Estimate S; blocks PROJ-505 (not done) -> U=1.2; 3 x 1.0 x 1.2"},
+    {"key": "PROJ-502", "state": "PARALLEL-OK", "score": 1.4,
+     "why": "design YELLOW (DSGN-602 In Progress) - parallel-start question; rest passes; 2 x 0.7"},
+    {"key": "PROJ-503", "state": "BLOCKED", "score": 0.3,
+     "why": "open 'is blocked by' PROJ-509 (In progress, not done); design N/A (BE-only); 3 x 0.1"},
+    {"key": "PROJ-504", "state": "NEEDS-GROOMING", "score": 0.8,
+     "why": "design AMBER (DSGN-604 To Do - tracked, not started); 2 x 0.4"},
+    {"key": "PROJ-505", "state": "NEEDS-GROOMING", "score": 1.2,
+     "why": "no estimate label anywhere -> needs sizing; design N/A (BE-only); 3 x 0.4"},
+    {"key": "PROJ-506", "state": "BLOCKED", "score": 0.2,
+     "why": "user-visible (iOS) with NO UIUX link and no Figma fallback -> design RED; 2 x 0.1"},
+    {"key": "PROJ-507", "state": "NEEDS-GROOMING", "score": 0.4,
+     "why": "live open question OQ-1 ('to confirm with BE', not resolved) fails gate iv; 1 x 0.4"},
+    {"key": "PROJ-508", "state": "READY", "score": 2.0,
+     "why": "BE-only -> design N/A, AC solid, no blockers, Estimate L; 2 x 1.0"},
+    {"key": "PROJ-510", "state": "NEEDS-GROOMING", "score": 1.2,
+     "why": "TRAP everything-green-except-AC: design GREEN, estimate present, no blockers - but AC is vague prose (not testable, no GWT, quality < 7) so gate ii soft-fails; 3 x 0.4"},
+    {"key": "PROJ-511", "state": "READY", "score": 2.0,
+     "why": "TRAP resolved-OQ: description carries an OQ-1 marker but the same line says RESOLVED - the exclusion rule applies, gate iv passes; BE-only design N/A; 2 x 1.0"},
+    {"key": "PROJ-512", "state": "READY", "score": 2.0,
+     "why": "TRAP figma-fallback: user-visible iOS story with NO UIUX link, but remotelinks has a Figma URL -> design GREEN per the gate table, not RED; 2 x 1.0"},
+    {"key": "PROJ-513", "state": "BLOCKED", "score": 0.3,
+     "why": "TRAP flag-not-links: no blocked-by links and everything else green, but Flagged (customfield_10990) is set -> impediment fails gate iii -> BLOCKED; 3 x 0.1"},
+    {"key": "PROJ-514", "state": "READY", "score": 1.0,
+     "why": "TRAP closed-blocker: an 'is blocked by' link exists but the blocker PROJ-516 is Closed/done -> deps cleared, not BLOCKED; design GREEN, estimate S; 1 x 1.0"},
+    {"key": "PROJ-515", "state": "NEEDS-GROOMING", "score": 0.8,
+     "why": "TRAP yellow-plus-OQ: design YELLOW tempts PARALLEL-OK, but PARALLEL-OK requires gates ii/iii/iv to pass and the live OQ-1 (unresolved) fails gate iv -> NEEDS-GROOMING; 2 x 0.4"}
+  ]
+}

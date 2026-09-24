@@ -1,0 +1,5 @@
+{
+  "_comment": "FROZEN Phase-1 spine for eval_prioritize.py - synthetic epic PROJ-500. PROJ-501..508 cover the full readiness-state matrix; PROJ-510..515 are adversarial conflicting-signal traps added after the base set saturated at 100%.",
+  "target": "PROJ-500",
+  "stories": ["PROJ-501", "PROJ-502", "PROJ-503", "PROJ-504", "PROJ-505", "PROJ-506", "PROJ-507", "PROJ-508", "PROJ-510", "PROJ-511", "PROJ-512", "PROJ-513", "PROJ-514", "PROJ-515"]
+}

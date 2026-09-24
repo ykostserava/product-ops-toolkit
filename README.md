@@ -24,6 +24,8 @@ Built by a PM who got tired of doing the same Jira-shaped rituals by hand, autom
 - **[board-sync](skills/board-sync/)** -- keeps parent statuses honest on a Jira board: deterministic engine (`scripts/board_consistency.py`, rules R1-R8: parent/child drift, unassigned active work, open blockers, aging WIP, external dependencies, release radar) -> `project-manager` judgment agent -> gated execution. Nothing is written without a per-item human yes; headless runs are propose-only by mechanism (`JIRA_PROPOSE_ONLY=1`).
 - **[jira-package](skills/jira-package/)** -- a batch of Jira changes as a reviewable JSON changeset applied by one engine (`scripts/jira_apply.py`): ASCII payloads, required fields from `jira-config.json`, live-enumerated transitions, resolution on close, one-way confirmation, every write verified by reading it back. Dry run first.
 - **[dup-check](skills/dup-check/)** -- "do we already have this?" with evidence: TF-IDF shortlist over the whole project (closed issues included, `scripts/duplicate_scan.py`) plus a judged duplicate / overlaps / distinct verdict. Read-only.
+- **[prioritize](skills/prioritize/)** -- a ranked, readiness-aware queue for an initiative or the whole roadmap: the `po-prioritizer` agent grades every story against 4 Definition-of-Ready gates (design graded, not hard-blocked; AC/INVEST; dependencies; estimate + open questions), ranks by V x R x U, and prints the exact "what's missing" list. Propose-only; with `--apply`, transitions and size labels go through per-item gates.
+- **[whats-next](skills/whats-next/)** -- "what should this dev pull next?": their own unfinished work first, then the best READY story matching their components, with the why. Read-only.
 - **[followups](skills/followups/)** -- dated, person-addressed follow-ups in one registry (`scripts/followups.py`): aging view, sync from your notes with per-item approval, ping drafts that are never sent by the tool, and a cooldown so nobody gets nagged twice.
 - **[writing-claude-code-rules](skills/writing-claude-code-rules/)** -- how to structure Claude Code instructions: CLAUDE.md vs `.claude/rules/` vs skills vs hooks, path-scoping, and why rules get ignored. Pairs with `rules/`.
 
@@ -43,6 +45,7 @@ Breakdown pipeline (used by `initiative-breakdown`):
 
 Board operations (used by `board-sync`):
 
+- `po-prioritizer` -- readiness assessment + V x R x U ranking for `prioritize` and `whats-next`; emits a machine-readable `prioritize-state` snapshot that `prioritize_delta.py` diffs between nightly runs. Read-only.
 - `project-manager` -- judgment layer over the consistency engine's findings: reads comments/labels/devinfo, recommends FIX / SKIP / FLAG_ONLY / ASSIGN per finding with a proposed exceptions entry, reviews existing exceptions (KEEP / LIFT / DROP). Read-only; execution stays behind the skill's gates.
 
 Audit fleet (used by the `cross-platform-audit` workflow):
@@ -109,6 +112,9 @@ Wiring instructions in `hooks/README.md`.
 | `followups.py` | the follow-ups registry CLI | no (local JSON) |
 | `jira_transition.py` | ONE status move: enumerate live, match by target name, one-way guard, resolution on close, verify after | yes, gated |
 | `jira_assign.py` | ONE assignee change, verified after | yes, gated |
+| `jira_label.py` | add/remove labels with add/remove ops (never `set`), verified after | yes, gated |
+| `prioritize_delta.py` | diff of two `/prioritize` snapshots for a nightly "what changed" | no |
+| `eval_prioritize.py` | judgment eval for the po-prioritizer agent against the frozen `tests/fixtures/prioritize_eval/` (state matrix + adversarial traps) | no |
 | `jira_apply.py` | a whole changeset through the same guards, `--dry-run` / `--apply` | yes, gated |
 
 | `eval_board_sync.py` | judgment eval: runs the project-manager agent headless against a frozen fixture and scores its verdicts against `expected.json` (accuracy + drift over repeated runs; `--min-accuracy` as a gate) | no |

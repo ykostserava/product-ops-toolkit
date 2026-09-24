@@ -1,20 +1,45 @@
 {
-  "_comment": "Team-specific Jira settings for scripts/*.py - see scripts/jira_config.py for every key and its default. Status names must match your workflow EXACTLY (case-insensitive). Values here are an illustrative Kanban workflow; edit them before the first live run.",
+  "_comment": "Team-specific Jira settings for scripts/*.py - see scripts/jira_config.py for every key and its default. Status names must match your workflow EXACTLY (case-insensitive). Values here are an illustrative Kanban workflow; edit them before the first live run. readiness_fields ids are PLACEHOLDERS - run `python scripts/jira_api.py fields --format=brief` and paste your instance's ids.",
   "project_key": "PROJ",
   "statuses": {
-    "one_way": ["Closed", "Ready for Dev"],
+    "one_way": [
+      "Closed",
+      "Ready for Dev"
+    ],
     "closed": "Closed",
     "epic_active": "In analysis",
-    "r4_active": ["In analysis", "Ready for Dev", "In progress", "Ready for testing"],
-    "r4_exempt_types": ["Initiative", "Epic"],
-    "r6_stale": ["In progress", "Ready for testing"],
-    "r8_ready": ["Closed", "Ready for beta release"]
+    "r4_active": [
+      "In analysis",
+      "Ready for Dev",
+      "In progress",
+      "Ready for testing"
+    ],
+    "r4_exempt_types": [
+      "Initiative",
+      "Epic"
+    ],
+    "r6_stale": [
+      "In progress",
+      "Ready for testing"
+    ],
+    "r8_ready": [
+      "Closed",
+      "Ready for beta release"
+    ]
   },
-  "parent_link_types": ["Implements", "Relates"],
+  "parent_link_types": [
+    "Implements",
+    "Relates"
+  ],
   "create_rules": {
     "require_components": true,
     "risk_class": null,
     "components_requiring_assignee": []
   },
-  "readiness_fields": {}
+  "readiness_fields": {
+    "acceptance_criteria": "customfield_10097",
+    "flagged": "customfield_10990",
+    "baseline_start": "customfield_10192",
+    "baseline_end": "customfield_10196"
+  }
 }
