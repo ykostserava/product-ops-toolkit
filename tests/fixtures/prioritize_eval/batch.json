@@ -1,5 +1,5 @@
 {
-  "_comment": "FROZEN jira_batch_fetch --trim readiness output for the eval spine. Estimates live in description ('Estimate: X') because the readiness trim carries no labels field. PROJ-501..508 frozen 2026-08-17; adversarial PROJ-510..515 added 2026-08-21 (PROJ-512 carries the remotelinks Figma-fallback payload).",
+  "_comment": "FROZEN jira_batch_fetch --trim readiness output for the eval spine. Estimates live in description ('Estimate: X') because the readiness trim carries no labels field. PROJ-501..508 = the state matrix; adversarial PROJ-510..515 (PROJ-512 carries the remotelinks design-URL fallback payload).",
   "meta": {
     "keys": ["PROJ-501", "PROJ-502", "PROJ-503", "PROJ-504", "PROJ-505", "PROJ-506", "PROJ-507", "PROJ-508", "PROJ-510", "PROJ-511", "PROJ-512", "PROJ-513", "PROJ-514", "PROJ-515"],
     "commands": ["get", "links", "comments", "remotelinks"],
@@ -71,7 +71,7 @@
       "comments": {"total": 0, "comments": []}
     },
     "PROJ-512": {
-      "get": {"key": "PROJ-512", "fields": {"summary": "Home screen balance card redesign (iOS)", "description": "Apply the refreshed balance card layout.\n\nEstimate: M", "customfield_10097": "Given a user on Home screen\nWhen the screen loads\nThen the balance card renders per the approved Figma layout\nAnd the currency amount uses the new typography scale", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "iOS"}], "issuelinks": []}},
+      "get": {"key": "PROJ-512", "fields": {"summary": "Home screen balance card redesign (iOS)", "description": "Apply the refreshed balance card layout.\n\nEstimate: M", "customfield_10097": "Given a user on Home screen\nWhen the screen loads\nThen the balance card renders per the approved design layout\nAnd the currency amount uses the new typography scale", "customfield_10990": null, "status": {"name": "Backlog", "statusCategory": {"key": "new", "name": "To Do"}}, "priority": {"name": "Medium"}, "issuetype": {"name": "Story"}, "assignee": null, "components": [{"name": "iOS"}], "issuelinks": []}},
       "links": [],
       "comments": {"total": 0, "comments": []},
       "remotelinks": [
