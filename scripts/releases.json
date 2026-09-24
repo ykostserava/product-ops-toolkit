@@ -1,0 +1,4 @@
+{
+  "_comment": "Active release deploy tickets for /board-sync R8 (release radar). One entry per deploy ticket: {release_ticket, platform, note, added_by}. Composition and date are read live from Jira: the deploy ticket's issue links into your project + fixVersion releaseDate (fallback duedate). When every fixVersion is released/archived the engine reports the entry as stale and the agent proposes removal via Gate C.",
+  "releases": []
+}

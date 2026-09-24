@@ -1,0 +1,4 @@
+{
+  "_comment": "Deliberate parent/child status mismatches that /board-sync must not nag about. match.parent is required; match.rule and match.child are nullable wildcards. expires (YYYY-MM-DD) null = permanent; expired entries stop suppressing and the engine warns. Curated via the skill's Gate C - seed entries only after a live scan confirms the finding.",
+  "exceptions": []
+}

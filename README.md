@@ -21,6 +21,10 @@ Built by a PM who got tired of doing the same Jira-shaped rituals by hand, autom
 - **[grill-me](skills/grill-me/)** -- relentless design-tree interview: asks the whole frontier of open decisions per round, each with a recommended answer, looks facts up itself and puts only decisions to you; closes with a Settled list that tells your own rulings from accepted recommendations. User-invoked only.
 - **[to-questionnaire](skills/to-questionnaire/)** -- turns a decision you cannot settle alone into an async discovery questionnaire for one named person; interviews you only about the send (who, what back), never about the subject. Writes one file, sends nothing.
 - **[handoff](skills/handoff/)** -- compacts the session into a document a fresh session can resume from: where the work is, what is verified, decisions with their author, dead ends, dangers, suggested skills. Plan, audit and execution as different sessions.
+- **[board-sync](skills/board-sync/)** -- keeps parent statuses honest on a Jira board: deterministic engine (`scripts/board_consistency.py`, rules R1-R8: parent/child drift, unassigned active work, open blockers, aging WIP, external dependencies, release radar) -> `project-manager` judgment agent -> gated execution. Nothing is written without a per-item human yes; headless runs are propose-only by mechanism (`JIRA_PROPOSE_ONLY=1`).
+- **[jira-package](skills/jira-package/)** -- a batch of Jira changes as a reviewable JSON changeset applied by one engine (`scripts/jira_apply.py`): ASCII payloads, required fields from `jira-config.json`, live-enumerated transitions, resolution on close, one-way confirmation, every write verified by reading it back. Dry run first.
+- **[dup-check](skills/dup-check/)** -- "do we already have this?" with evidence: TF-IDF shortlist over the whole project (closed issues included, `scripts/duplicate_scan.py`) plus a judged duplicate / overlaps / distinct verdict. Read-only.
+- **[followups](skills/followups/)** -- dated, person-addressed follow-ups in one registry (`scripts/followups.py`): aging view, sync from your notes with per-item approval, ping drafts that are never sent by the tool, and a cooldown so nobody gets nagged twice.
 - **[writing-claude-code-rules](skills/writing-claude-code-rules/)** -- how to structure Claude Code instructions: CLAUDE.md vs `.claude/rules/` vs skills vs hooks, path-scoping, and why rules get ignored. Pairs with `rules/`.
 
 The three interview/handoff skills are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT); each carries a `NOTICE.md`.
@@ -36,6 +40,10 @@ Breakdown pipeline (used by `initiative-breakdown`):
 - `breakdown-generator` -- generates epics and stories using configured templates
 - `quality-reviewer` -- INVEST validation + PO auto-review + control manifest
 - `mobile-delivery-agent` -- specialized assistant for mobile delivery managers; team-level patterns, release cycles, store constraints
+
+Board operations (used by `board-sync`):
+
+- `project-manager` -- judgment layer over the consistency engine's findings: reads comments/labels/devinfo, recommends FIX / SKIP / FLAG_ONLY / ASSIGN per finding with a proposed exceptions entry, reviews existing exceptions (KEEP / LIFT / DROP). Read-only; execution stays behind the skill's gates.
 
 Audit fleet (used by the `cross-platform-audit` workflow):
 
@@ -83,6 +91,26 @@ Wiring instructions in `hooks/README.md`.
 - `tshirt-sizing-guide.md` -- when to break down, when to split, when to skip Epic layer
 - `user-story-format.md` -- INVEST checklist, Given-When-Then, anti-patterns
 - `jira-api-best-practices.md` -- ASCII safety, default priority, scope confirmation
+- `jira-read-protocol.md` -- the read-side contract every judgment agent shares: one access point, batch fetch exit codes, devinfo cost, dev-roster semantics, JQL quoting
+
+### Scripts and tests
+
+`scripts/` -- the stdlib-only engines behind the Jira skills, with their tests in `tests/` (run `pip install -r requirements-dev.txt && pytest`). A skill without its script and test is a promise; these are the mechanics:
+
+| Script | Role | Writes to Jira? |
+|---|---|---|
+| `jira_api.py` | the ONLY Jira access point: `.env`-configured REST client + CLI (`search`, `get`, `epic`, `links`, `comments`, `devinfo`, `transitions`, ...) | no |
+| `jira_config.py` + `jira-config.json` | team settings: project key, status names, one-way statuses, create rules, readiness fields | - |
+| `jira_batch_fetch.py` | parallel (key x command) reads merged into one JSON; exit 2 = partial, `AUTH:` = stop | no |
+| `board_consistency.py` | rules R1-R8 over the issue graph, exceptions and releases registries | no |
+| `board_sync_delta.py` | diff of two `--report` snapshots for a nightly "what changed" | no |
+| `duplicate_scan.py` | two-stage TF-IDF duplicate shortlist | no |
+| `followups.py` | the follow-ups registry CLI | no (local JSON) |
+| `jira_transition.py` | ONE status move: enumerate live, match by target name, one-way guard, resolution on close, verify after | yes, gated |
+| `jira_assign.py` | ONE assignee change, verified after | yes, gated |
+| `jira_apply.py` | a whole changeset through the same guards, `--dry-run` / `--apply` | yes, gated |
+
+Every writer refuses when `JIRA_PROPOSE_ONLY=1` is set - put that in any scheduled wrapper and a headless run cannot write even if the model decides to. Connection settings: copy `scripts/.env.example` to `scripts/.env`.
 
 ### Pipelines
 
@@ -147,6 +175,8 @@ To pin a version, set `version` in `.claude-plugin/plugin.json` and tag the rele
    Note: with manual install, references to `${CLAUDE_PLUGIN_ROOT}` inside SKILL.md and agent files won't resolve — replace them with absolute paths to where you cloned the repo, or copy the templates / patterns / memory directories into your project.
 
 3. **Configure `config.yml`** inside `skills/initiative-breakdown/` - set your product name, Jira URL, platforms, templates, and constraints.
+
+   For the Jira skills (`board-sync`, `jira-package`, `dup-check`) also copy `scripts/.env.example` to `scripts/.env` and edit `scripts/jira-config.json` (project key, your workflow's status names, one-way statuses).
 
 4. **Seed your `memory/`** directory with product context, patterns, and templates. Run `/scaffold-memory` (after copying the skill) or copy the `memory/` scaffold from this repo.
 
