@@ -24,7 +24,7 @@ If multiple backend services are relevant (e.g. accounts-api + permission-servic
 ### 1. Stack detection (30 sec)
 - Identify framework: Symfony, Laravel, Spring Boot, NestJS, Express, FastAPI, Rails
 - Note service boundary: monolith vs microservice; if microservice, note related services known from context
-- Check for OpenAPI/RAML spec file — if present, prefer it as source of truth
+- Check for OpenAPI/RAML spec file — if present, prefer it as source of truth for endpoint semantics (citations stay handler-first, see Hard rules)
 
 ### 2. Endpoint inventory
 - If RAML/OpenAPI exists: parse it, capture every endpoint in scope
@@ -32,7 +32,15 @@ If multiple backend services are relevant (e.g. accounts-api + permission-servic
 - **Reference:** prefer `skills/codebase-research/scripts/extract_endpoints.py` from this toolkit, if installed
 
 For each endpoint capture:
-- Method, path, handler file:line
+- Method, path, and `callsite` = handler `file:line` in the audited repo. The field is
+  named `callsite` (same as the other three auditors) — the workflow's evidence gate
+  and the self-verification fragment both read `endpoints[].callsite`, so an endpoint
+  under any other key fails the evidence gate and is reported as unevidenced
+  (candidate hallucination). REQUIRED: cite the handler `file:line` whenever you
+  found one; fall back to the spec `file:line` ONLY for an endpoint known solely
+  from a RAML/OpenAPI spec with no locatable handler. If you cannot cite any file
+  at all, the endpoint goes to `notes` as
+  `"uncited endpoint: <METHOD> <path> (<why no citation>)"`, not to `endpoints[]`.
 - Required auth (session/JWT/none)
 - Request DTO shape (key fields only, not full schema)
 - Response DTO shape (key fields only)
@@ -48,6 +56,22 @@ For documented endpoints, check whether the actual handler signature matches the
 - Path/method mismatches
 Note any drift in the `drift` array.
 
+<!-- shared-fragment: self-verification v3 — keep byte-identical across all four *-auditor.md -->
+### Self-verification (before returning)
+
+Re-check your own citations before emitting the final JSON:
+
+- For every `endpoints[].callsite` and `analytics_events[].trigger`, re-open the cited file and confirm the referenced call/event is really there. Drop the entry (or demote it to `notes`) if you cannot re-confirm it by reading.
+- Never invent `file:line`. If you are sure of the file but not the line, cite the file only and add `"confidence": "low"` to that entry. A file-only citation is NOT a cheaper escape hatch: the verify stage checks the whole cited file and refutes the claim if nothing in it supports the claim (a direct call, or an indirect dispatch it can trace the named event to).
+- Do not pad arrays: fewer confirmed findings beat more unconfirmed ones. Empty is a valid result.
+- Downstream, an adversarial verify stage re-opens cited files; one invented citation can flag the whole platform audit as unreliable, which costs far more than one dropped finding.
+<!-- /shared-fragment: self-verification -->
+
+Backend-specific: when self-verification demotes an endpoint to `notes`, use the exact
+`"uncited endpoint: <METHOD> <path> (<why no citation>)"` format from section 2 — the
+audit-coordinator and the workflow's evidence gate grep for that prefix; a free-form
+demotion note gets the endpoint flagged as a phantom call.
+
 ## Output Contract
 
 Your final assistant message MUST be a single JSON object, with no markdown fences, no preamble, no trailing text. Shape:
@@ -60,7 +84,7 @@ Your final assistant message MUST be a single JSON object, with no markdown fenc
   "stack": { "framework": "Symfony|Spring|...", "services": ["accounts-api", "permission-service"] },
   "endpoints": [
     { "method": "PUT", "path": "/accounts/{n}/deactivate",
-      "handler": "src/Controller/AccountsController.php:204",
+      "callsite": "src/Controller/AccountsController.php:204",
       "auth": "JWT", "owner": "accounts-team",
       "request": { "fields": [] },
       "response": { "fields": ["id", "status", "deactivated_at"] },
@@ -71,7 +95,7 @@ Your final assistant message MUST be a single JSON object, with no markdown fenc
       "issue": "spec lists 'goal_amount' as required; handler returns null in production cases" }
   ],
   "notes": ["..."],
-  "_markdown_report": "## Stack\n\n...\n\n## Endpoints\n\n| Method | Path | Handler | Auth | Owner |\n|---|---|---|---|---|\n..."
+  "_markdown_report": "## Stack\n\n...\n\n## Endpoints\n\n| Method | Path | Callsite | Auth | Owner |\n|---|---|---|---|---|\n..."
 }
 ```
 
@@ -80,7 +104,7 @@ The `_markdown_report` field is a single string containing the human-readable Ma
 ## Hard rules
 
 - **Read-only.** You have no Write tool. Do not attempt to modify any file.
-- **Source of truth order:** OpenAPI/RAML > routing config > handler signature. Never infer when explicit spec exists.
+- **Source of truth order (endpoint SEMANTICS — method, path, auth, DTO shapes):** OpenAPI/RAML > routing config > handler signature. Never infer semantics when explicit spec exists. This order does NOT govern the `callsite` citation — citations are handler-first per section 2, even for endpoints whose semantics came from the spec.
 - **Do not** make platform recommendations. You produce the canonical endpoint list that other auditors are matched against.
 - **Final message = pure JSON.** No code fences, no narrative around it. If you cannot produce valid JSON, return `{"error": "<short reason>"}` instead.
 - If `auth` cannot be determined for an endpoint, set `"auth": "unknown"` (not a guess).

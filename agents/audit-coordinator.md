@@ -34,10 +34,28 @@ Expected input files (any subset):
 - If backend.json present: use its endpoints array as the canonical list
 - Otherwise: union endpoints from platform files
 - For each canonical endpoint, mark which platforms consume it: `ios`, `android`, `web`, or `—` for none
+- **Match paths across platforms with normalization** — platforms cite what their source contains,
+  so the same endpoint arrives in different shapes. Join only when the HTTP method is
+  identical AND one of: leading slash differs (mobile HTTP-client annotation args are base-URL-relative:
+  `currency-conversion` == `/currency-conversion`); the shorter path is a suffix of the longer and the
+  extra prefix is a single gateway/base mount segment; placeholder identifier names differ
+  (`/accounts/{n}` == `/accounts/{accountId}`).
+  - With `backend.json` present: normalization matches CONSUMER rows to backend rows. Never merge
+    two backend-side rows with it — the backend list is canonical; two distinct backend rows are
+    two distinct endpoints. When a row was joined, keep the backend spelling as canonical and say
+    so in the row's `notes`.
+  - On the union path (no `backend.json`): apply the same rules to merge CONSUMER rows across
+    platforms — `currency-conversion` (android) and `/currency-conversion` (web) are one row, not
+    two `single_platform` entries. As canonical spelling prefer the leading-slash form, then the
+    longer path; note the join and the per-platform spellings in the row's `notes`.
 
 ### 3. Identify endpoint gaps
 - **Orphan endpoints** (backend exposes, no platform consumes) → flag
-- **Phantom calls** (platform consumes, backend doesn't expose) → flag — likely stale or pointing to wrong service
+- **Phantom calls** (platform consumes, backend doesn't expose) → flag — likely stale or pointing to wrong service.
+  Before flagging, check the backend `notes` for `uncited endpoint: <METHOD> <path>` entries (apply the
+  same path normalization when matching them) — a demoted endpoint the backend auditor could not cite is
+  still a real endpoint, not a phantom. Put such endpoints under `endpoint_gaps.backend_uncited`, and in
+  the matrix give them a row with `backend: true` plus a note "backend cited no file (demoted)"
 - **Single-platform endpoints** → note (might be intentional or might be coverage gap)
 
 ### 4. Build UI pattern matrix
@@ -72,7 +90,8 @@ Your final assistant message MUST be a single JSON object, with no markdown fenc
   "endpoint_gaps": {
     "orphan_backend_only": [],
     "phantom_consumer_only": [],
-    "single_platform": []
+    "single_platform": [],
+    "backend_uncited": []
   },
   "ui_pattern_equivalents": [
     { "concept": "Statement detail view",
@@ -87,6 +106,10 @@ Your final assistant message MUST be a single JSON object, with no markdown fenc
   "tracking_gaps": [],
   "event_name_drift": [],
   "backend_drift": [],
+  "verification_summary": [
+    { "platform": "ios", "verdict": "trustworthy",
+      "checked": 12, "confirmed": 11, "refuted": 0, "unverifiable": 1, "unevidenced": 2, "demoted": 0 }
+  ],
   "po_summary": {
     "top_gaps": ["..."],
     "top_inconsistencies": ["..."]
@@ -96,6 +119,8 @@ Your final assistant message MUST be a single JSON object, with no markdown fenc
 ```
 
 The `_coverage_matrix_md` field is a single string with the full human-readable Markdown coverage matrix (sections 1-6 as in the original template). The orchestrator extracts it and writes `coverage-matrix.md`; the rest of the JSON is written to `coverage-matrix.md.json`.
+
+When the input findings carry a `verification` object per platform, fill `verification_summary` (one entry per platform, numbers as counts — the input's `confirmed`/`refuted`/`unverifiable`/`unevidenced`/`demoted` arrive as lists, use their lengths) and reflect it in `_coverage_matrix_md`: a platform verdicts table, plus the platform's unevidenced claims listed under the matrix rows they affect. `demoted` entries are the auditor's own `uncited endpoint:` notes — never candidate hallucinations. For the backend platform handle them via the `backend_uncited` rule in section 3; for consumer platforms report them only in the platform's `demoted` count (backend_uncited is backend-only, no `backend: true` rows from consumer notes). Keep `refuted` (audit was wrong) and `unverifiable` (check could not run) separate everywhere — never conflate them.
 
 ## Hard rules
 

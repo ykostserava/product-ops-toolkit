@@ -47,6 +47,17 @@ For the feature scope:
 ### 5. Tracking gaps
 For each significant user action found in step 3, check if step 4 captured an event for it. Anything missing = tracking gap.
 
+<!-- shared-fragment: self-verification v3 — keep byte-identical across all four *-auditor.md -->
+### Self-verification (before returning)
+
+Re-check your own citations before emitting the final JSON:
+
+- For every `endpoints[].callsite` and `analytics_events[].trigger`, re-open the cited file and confirm the referenced call/event is really there. Drop the entry (or demote it to `notes`) if you cannot re-confirm it by reading.
+- Never invent `file:line`. If you are sure of the file but not the line, cite the file only and add `"confidence": "low"` to that entry. A file-only citation is NOT a cheaper escape hatch: the verify stage checks the whole cited file and refutes the claim if nothing in it supports the claim (a direct call, or an indirect dispatch it can trace the named event to).
+- Do not pad arrays: fewer confirmed findings beat more unconfirmed ones. Empty is a valid result.
+- Downstream, an adversarial verify stage re-opens cited files; one invented citation can flag the whole platform audit as unreliable, which costs far more than one dropped finding.
+<!-- /shared-fragment: self-verification -->
+
 ## Output Contract
 
 Your final assistant message MUST be a single JSON object, with no markdown fences, no preamble, no trailing text. Shape:
