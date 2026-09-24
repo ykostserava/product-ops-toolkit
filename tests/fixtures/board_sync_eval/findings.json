@@ -1,0 +1,84 @@
+{
+  "_comment": "SEED eval fixture for scripts/eval_board_sync.py - four synthetic findings, one suppressed. Grow it from your own board via candidates.jsonl; do not regenerate from a live scan without re-curating expected.json.",
+  "schema": "board-consistency/1",
+  "scope": {
+    "jql": "project = PROJ",
+    "issues_scanned": 42,
+    "edges": {"initiative_epic": 2, "epic_story": 6, "story_subtask": 3}
+  },
+  "findings": [
+    {
+      "id": "R1-PROJ-108-7e21",
+      "rule": "R1",
+      "edge": "epic_story",
+      "parent": {"key": "PROJ-108", "type": "Epic", "status": "Backlog", "statusCategory": "new"},
+      "children": [
+        {"key": "PROJ-115", "type": "Story", "status": "In progress", "statusCategory": "indeterminate"}
+      ],
+      "evidence": "1 of 4 children active while PROJ-108 is 'Backlog'",
+      "proposal": {"action": "transition", "key": "PROJ-108", "to": "In analysis", "one_way": false, "resolution": null, "executable": true, "note": null},
+      "suppressed_by": null
+    },
+    {
+      "id": "R2-PROJ-107-5b18",
+      "rule": "R2",
+      "edge": "epic_story",
+      "parent": {"key": "PROJ-107", "type": "Epic", "status": "On Stage", "statusCategory": "indeterminate"},
+      "children": [
+        {"key": "PROJ-201", "type": "Story", "status": "Closed", "statusCategory": "done"},
+        {"key": "PROJ-202", "type": "Story", "status": "Closed", "statusCategory": "done"}
+      ],
+      "evidence": "all 2 children done while PROJ-107 is 'On Stage'",
+      "proposal": {"action": "transition", "key": "PROJ-107", "to": "Closed", "one_way": true, "resolution": "Done", "executable": true, "note": "ONE-WAY: no REST path out of Closed; resolution must be right at close time"},
+      "suppressed_by": null,
+      "release_context": {"release_ticket": "REL-770", "platform": "android", "date": "2026-02-19"}
+    },
+    {
+      "id": "R3-PROJ-285-c3d0",
+      "rule": "R3",
+      "edge": "story_subtask",
+      "parent": {"key": "PROJ-285", "type": "Story", "status": "Closed", "statusCategory": "done"},
+      "children": [
+        {"key": "PROJ-286", "type": "Sub-task", "status": "In progress", "statusCategory": "indeterminate"}
+      ],
+      "evidence": "PROJ-285 is 'Closed' but 1 children are still open",
+      "proposal": {"action": "flag", "key": "PROJ-285", "to": null, "one_way": false, "resolution": null, "executable": false, "note": "cannot reopen a Closed parent via REST; either the children should be closed (one-way, per-child decision) or this is a real leak"},
+      "suppressed_by": null
+    },
+    {
+      "id": "R4-PROJ-420-2f9a",
+      "rule": "R4",
+      "edge": "issue",
+      "parent": {"key": "PROJ-420", "type": "Task", "status": "In progress", "statusCategory": "indeterminate"},
+      "children": [],
+      "evidence": "PROJ-420 is 'In progress' with no assignee",
+      "proposal": {"action": "assign", "key": "PROJ-420", "to": null, "assignee": null, "one_way": false, "resolution": null, "executable": true, "note": "candidate must come from the project-manager agent (roster component -> relatedness -> WIP), decided at approval time"},
+      "suppressed_by": null
+    }
+  ],
+  "suppressed": [
+    {
+      "id": "R2-PROJ-94-a1b2",
+      "rule": "R2",
+      "edge": "epic_story",
+      "parent": {"key": "PROJ-94", "type": "Epic", "status": "On Stage", "statusCategory": "indeterminate"},
+      "children": [
+        {"key": "PROJ-95", "type": "Story", "status": "Closed", "statusCategory": "done"}
+      ],
+      "evidence": "all 1 children done while PROJ-94 is 'On Stage'",
+      "proposal": {"action": "transition", "key": "PROJ-94", "to": "Closed", "one_way": true, "resolution": "Done", "executable": true, "note": null},
+      "suppressed_by": "web epic staged, not in prod - close only after the prod release",
+      "suppressed_entry": {
+        "match": {"rule": "R2", "parent": "PROJ-94", "child": null},
+        "reason": "web epic staged, not in prod - close only after the prod release",
+        "added": "2026-01-12",
+        "added_by": "po",
+        "expires": null
+      }
+    }
+  ],
+  "unused_exceptions": [],
+  "stale_releases": [],
+  "category_mismatch_counts": {"initiative_epic": 0, "epic_story": 3, "story_subtask": 1},
+  "meta": {"errors": [], "warnings": []}
+}

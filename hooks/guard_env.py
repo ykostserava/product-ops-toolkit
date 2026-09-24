@@ -3,7 +3,10 @@
 Exits 2 (blocking error) when target path is .env, .env.local, .env.dev, etc.
 Stderr is shown to the model so it knows why the write was blocked.
 """
-import sys, json, os.path
+
+import sys
+import json
+import os.path
 
 try:
     data = json.load(sys.stdin)

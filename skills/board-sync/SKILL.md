@@ -141,18 +141,33 @@ ticket) are made here too when the user names one.
 
 Print `Gate C: SAVED <n> / REMOVED <m> exception(s)` or `Gate C: SKIPPED`.
 
-## Override capture (optional - feeds an eval set)
+## Override capture (eval candidates - after the gates)
 
 Every human decision that DIFFERS in JUDGMENT from the agent's recommendation
-is a future golden case for an eval of the project-manager agent. If you keep
-one, capture it while the run's evidence is at hand: a FIX/ASSIGN refused
-because the judgment is wrong (not "not now"), a candidate replaced, a
-SKIP/FLAG_ONLY the user executes against, a verdict corrected in discussion.
-Pure deferrals do not count - ask ONCE at close (one batched question):
-"disagree with the recommendation, or just deferring?" Store the frozen
-`finding` object and the parent's evidence slice with the user's reason in
-their own words; promotion into a fixture stays a separate reviewed step.
-Headless `--report` runs have no gates - nothing to capture.
+is a future golden case for `scripts/eval_board_sync.py` - capture it while
+the run's evidence is still at hand:
+
+- **What counts as an override:** a FIX/ASSIGN refused because the user says
+  the judgment is wrong (not "not now"), a candidate replaced with another
+  name, a SKIP/FLAG_ONLY the user executes against, or a verdict the user
+  corrects in discussion (incl. exceptions-review KEEP/LIFT/DROP).
+- **What does NOT:** pure deferrals. If a FIX/ASSIGN was excluded from the
+  Gate B selection without a stated reason, ask ONCE at close (one batched
+  question for all exclusions): "disagree with the recommendation, or just
+  deferring?" Only "disagree" answers are captured.
+- For each override, append one entry (reason = the user's own words, one
+  line) INCLUDING the frozen `finding` object and the parent's `evidence`
+  slice from this run's batch file - without them the case cannot be promoted:
+
+```
+python scripts/eval_candidates.py add --source board-sync --json '{"id": "<finding id>", "rule": "R1", "parent": "PROJ-x", "agent": {"recommendation": "FIX"}, "human": {"decision": "SKIP", "reason": "<their words>"}, "finding": {...}, "evidence": {...}}'
+```
+
+This writes only to `tests/fixtures/board_sync_eval/candidates.jsonl` (repo
+file, no gate needed; the script dedups). Promotion into the frozen fixture +
+expected.json stays a separate human-reviewed step (see the fixture README).
+Headless `--report` runs have no gates - nothing to capture. Print
+`Overrides captured: <n>` (or `0`).
 
 ## `--report` mode (headless-safe)
 

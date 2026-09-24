@@ -67,6 +67,7 @@ Audit fleet (used by the `cross-platform-audit` workflow):
 
 - `secret_scan.py` -- blocks `git commit` when gitleaks finds a secret in the staged diff (fails open if gitleaks isn't installed)
 - `guard_env.py` -- blocks Claude from writing/editing `.env*` files
+- `guard_jira_ascii.py` -- blocks a shell command that sends a non-ASCII payload to a Jira/Confluence host (a corporate WAF may 400 on it); local work that merely mentions the host is untouched. Ships with its test
 
 Wiring instructions in `hooks/README.md`.
 
@@ -110,7 +111,11 @@ Wiring instructions in `hooks/README.md`.
 | `jira_assign.py` | ONE assignee change, verified after | yes, gated |
 | `jira_apply.py` | a whole changeset through the same guards, `--dry-run` / `--apply` | yes, gated |
 
-Every writer refuses when `JIRA_PROPOSE_ONLY=1` is set - put that in any scheduled wrapper and a headless run cannot write even if the model decides to. Connection settings: copy `scripts/.env.example` to `scripts/.env`.
+| `eval_board_sync.py` | judgment eval: runs the project-manager agent headless against a frozen fixture and scores its verdicts against `expected.json` (accuracy + drift over repeated runs; `--min-accuracy` as a gate) | no |
+| `eval_candidates.py` | registry of live human overrides - the curation queue that grows the golden set | no (local JSONL) |
+| `claude_cli.py` | `headless_env()`: what a `claude -p` child may inherit (strips credentials, provider routing, nested-session markers) | - |
+
+Every writer refuses when `JIRA_PROPOSE_ONLY=1` is set - put that in any scheduled wrapper and a headless run cannot write even if the model decides to. Connection settings: copy `scripts/.env.example` to `scripts/.env`. The eval fixture under `tests/fixtures/board_sync_eval/` ships as a synthetic seed - your golden set grows from your own board's overrides.
 
 ### Pipelines
 

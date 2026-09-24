@@ -1,0 +1,17 @@
+{
+  "_comment": "Golden verdicts for the seed eval fixture. Scoring: recommendation must match (case-insensitive); candidate must match exactly when present; exceptions_review is scored per (rule, parent).",
+  "findings": [
+    {"id": "R1-PROJ-108-7e21", "rule": "R1", "parent": "PROJ-108", "recommendation": "FIX",
+     "why": "child actively worked (fresh dev comment, open MR), no hold signal - real drift, activate the epic"},
+    {"id": "R2-PROJ-107-5b18", "rule": "R2", "parent": "PROJ-107", "recommendation": "SKIP",
+     "why": "release_context present: epic waits for REL-770 (2026-02-19) - SKIP with expires around release date + 3d, never close before the release ships"},
+    {"id": "R3-PROJ-285-c3d0", "rule": "R3", "parent": "PROJ-285", "recommendation": "FLAG_ONLY",
+     "why": "Closed parent cannot be reopened via REST; the open child's evidence fetch failed - surface only"},
+    {"id": "R4-PROJ-420-2f9a", "rule": "R4", "parent": "PROJ-420", "recommendation": "ASSIGN", "candidate": "alex.example@example.com",
+     "why": "component Backend -> roster row Alex Example; the comment and the open MR name the same person"}
+  ],
+  "exceptions_review": [
+    {"rule": "R2", "parent": "PROJ-94", "verdict": "KEEP",
+     "why": "reason still holds - the latest comment says staging only, no prod release evidence"}
+  ]
+}

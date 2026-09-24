@@ -8,6 +8,7 @@ the things that must never slip.
 |------|-------|--------------------|
 | `secret_scan.py` | PreToolUse (Bash/PowerShell) | `git commit` is blocked when [gitleaks](https://github.com/gitleaks/gitleaks) finds a secret in the staged diff. Fails open if gitleaks isn't installed. |
 | `guard_env.py` | PreToolUse (Write/Edit) | Claude cannot write or edit `.env*` files — credentials are edited by humans only. |
+| `guard_jira_ascii.py` | PreToolUse (Bash/PowerShell) | A shell command that actually SENDS a request to a Jira/Confluence host (curl, Invoke-RestMethod, python requests/urllib, node fetch, `jira_api.py add-comment`, ...) is denied when it contains a non-ASCII character. Local work that merely mentions the host (notes, greps, commits) stays untouched. Hosts: anything matching `jira.` / `confluence.` / `atlassian.`, plus `GUARD_JIRA_HOSTS=host1,host2`. Tested by `tests/test_guard_jira_ascii.py` with the inputs it must fire on and the ones it must not. |
 
 ## Install
 
@@ -15,7 +16,7 @@ the things that must never slip.
 
    ```bash
    mkdir -p ~/.claude/hooks
-   cp hooks/secret_scan.py hooks/guard_env.py ~/.claude/hooks/
+   cp hooks/secret_scan.py hooks/guard_env.py hooks/guard_jira_ascii.py ~/.claude/hooks/
    ```
 
 2. Wire them in `~/.claude/settings.json` (user-wide) or `.claude/settings.json`
@@ -28,7 +29,8 @@ the things that must never slip.
          {
            "matcher": "Bash|PowerShell",
            "hooks": [
-             { "type": "command", "command": "python ~/.claude/hooks/secret_scan.py", "timeout": 60 }
+             { "type": "command", "command": "python ~/.claude/hooks/secret_scan.py", "timeout": 60 },
+             { "type": "command", "command": "python ~/.claude/hooks/guard_jira_ascii.py", "timeout": 10 }
            ]
          },
          {
