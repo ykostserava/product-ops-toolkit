@@ -1,0 +1,13 @@
+# Pinned so the lint result does not depend on which ruff version CI happens
+# to install: ruff's default rule set moves between minor releases.
+target-version = "py311"
+line-length = 88
+
+[lint]
+# pyflakes + the pycodestyle errors, plus one rule worth keeping on every
+# machine: a text open() with no encoding follows the OS locale (cp1252 on
+# Windows), which is how a UTF-8 registry becomes a UnicodeDecodeError
+# mid-run. PLW1514 is preview-only in ruff 0.15.x; with `select` pinned,
+# `preview` enables that rule without pulling in every other preview finding.
+preview = true
+select = ["E4", "E7", "E9", "F", "PLW1514"]
