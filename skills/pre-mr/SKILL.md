@@ -3,7 +3,7 @@ name: pre-mr
 description: Pre-review gate - run BEFORE pushing any commit that goes to team review (MR/PR create or update). Deterministic checks, boundary tables for pure functions, a constant-mutation sweep, adversarial fresh-context review of the diff, and a claims audit of the MR text. Triggers on "pre-mr", "gate before the MR", or any push to a branch with an open/planned MR.
 ---
 
-# /pre-mr — gate before anything goes to review
+# /pre-mr - gate before anything goes to review
 
 The author is anchored on their own solution. This gate is mechanized fresh eyes,
 built from the four error classes that team review actually caught (the first two merge requests this gate was built from - two review rounds each, both found defects the author walked past):
@@ -25,11 +25,14 @@ built from the four error classes that team review actually caught (the first tw
    (`scripts/eval_board_sync.py` / `scripts/eval_prioritize.py`, `--runs 3`)
    before pushing and keep the report next to the MR. A red eval means the doc
    change regressed judgment - fix the doc, not the golden set.
+   **Repo-specific checks:** if a `local-checks.md` sits next to this file, run
+   every check it lists here. A repository adds its own deterministic gates
+   that way; this skill ships none, so the file is normally absent.
 
 2. **Boundary tables, then the constant sweep.** For every NEW or MODIFIED pure
    function: actually execute it over a printed input/output table covering
    0 / 1 / boundary / just-past-boundary / large. Eyeball for cliffs and
-   non-monotonicity. Ten lines of throwaway code — this is the cheapest step and
+   non-monotonicity. Ten lines of throwaway code - this is the cheapest step and
    the one most often skipped.
 
    Then let the machine pick the constants, because judgement picks one and
@@ -46,15 +49,17 @@ built from the four error classes that team review actually caught (the first tw
    can drift there and nothing says so. Pin it or state why it does not matter.
 
    > Why: in one real case three models reviewed a test guarding two thresholds,
-   > mutated one, and called the test real. The other was unpinned — loosening
+   > mutated one, and called the test real. The other was unpinned - loosening
    > it passed green, and a human reviewer found it a day later. The sweep finds
    > it in seconds, without judgement.
 
-3. **Adversarial fresh-context pass.** Spawn a reviewer agent (no shared context with
-   the authoring conversation) on the full diff, prompted to REFUTE, with explicit
-   lenses:
+3. **Adversarial fresh-context pass.** Commit first, then spawn a reviewer agent
+   (no shared context with the authoring conversation) on the COMMITTED diff  - 
+   `git diff <base>...HEAD`, not the working tree: the marker in step 6 names
+   HEAD, and a pass that read uncommitted edits vouches for content the push
+   does not carry. Prompt it to REFUTE, with explicit lenses:
    - *Failure paths:* for every external call in the diff that can return null / throw /
-     time out — trace what happens next. "It won't happen" is not an answer.
+     time out - trace what happens next. "It won't happen" is not an answer.
    - *Boundaries:* re-derive step 2 independently; check small-N vs large-N fairness.
    - *Aggregation:* does any count/summary destroy information someone downstream is
      told to use?
@@ -66,7 +71,7 @@ built from the four error classes that team review actually caught (the first tw
    you thought of; a real run catches what you didn't. If the diff changes a workflow,
    skill, or hook: execute its cheapest real invocation (workflow `dryRun`, hook
    pipe-test with synthetic stdin, skill on a toy input). For workflow logic changes,
-   schedule one REAL end-to-end run before merge — note it in the MR description if
+   schedule one REAL end-to-end run before merge - note it in the MR description if
    it hasn't happened yet, so the reviewer knows.
 
 5. **Claims audit.** Every behavioral assertion in the MR title, description, code
@@ -75,18 +80,26 @@ built from the four error classes that team review actually caught (the first tw
    Special case: never assert what a mechanism "will catch/enforce" unless that
    mechanism demonstrably contains the check.
 
-6. **Write the gate marker, only then push.** After every step above passes,
-   record the reviewed CONTENT so the enforcement hook lets the push through:
+6. **Commit, write the gate marker, only then push.** After every step above
+   passes on the COMMITTED diff, record the reviewed content so the enforcement
+   hook lets the push through:
 
    ```bash
    python hooks/pre_mr_marker.py write --base origin/master
    ```
 
-   The marker holds a digest of the diff the pass actually read (tracked changes
-   against the base plus untracked files), not just a HEAD sha. So an amend that
-   only rewords a commit keeps it, while **applying review findings invalidates
-   it** — which is the point. Re-marking a changed diff requires
-   `--reason "<what you re-verified>"`, and the reason is stored in the marker.
+   The marker holds the tree id of HEAD - exactly what a push sends - not a
+   commit sha. So an amend that only rewords a commit keeps it, while
+   **committing review findings invalidates it** - which is the point.
+   Re-marking changed content requires `--reason "<what you re-verified>"`, and
+   the reason is stored in the marker. The marker file is one per working
+   tree, not one per branch, and it is keyed by content - so the first write on
+   a new branch, a rebase and a merge of the base into the branch also change
+   the tree and ask for a reason; say which of those it was. Uncommitted and untracked files are not
+   covered (they are not pushed either): `write` refuses while tracked files
+   have uncommitted changes, so a pass that read the working tree is not
+   mistaken for a pass on HEAD. Unrelated work in progress in the same tree is
+   the one case for `--allow-dirty`.
 
    > Why: in one real case findings were applied AFTER the adversarial pass, the
    > marker was rewritten as a mechanical step because HEAD had moved, and a
@@ -105,7 +118,7 @@ built from the four error classes that team review actually caught (the first tw
    because a gate is a team decision. Add to your `~/.claude/settings.json`:
 
    ```json
-   { "hooks": { "PreToolUse": [ { "matcher": "Bash",
+   { "hooks": { "PreToolUse": [ { "matcher": "Bash|PowerShell",
        "hooks": [ { "type": "command",
                     "command": "python3 ~/.claude/hooks/guard_pre_mr.py" } ] } ] } }
    ```
@@ -115,11 +128,11 @@ built from the four error classes that team review actually caught (the first tw
    imports the marker module from its own directory (without it, it falls
    back to a HEAD-only comparison).
 
-   If a reviewer later finds something this gate missed — add the
+   If a reviewer later finds something this gate missed - add the
    miss as a new lens in step 3 (this file is a living checklist).
 
 ## Scope
 
 Applies to: every push to a branch with an open MR, and the initial push before
-MR creation. Does NOT replace CI or team review — it exists so team review spends
+MR creation. Does NOT replace CI or team review - it exists so team review spends
 time on design, not on nulls and cliffs.

@@ -1,6 +1,6 @@
 ---
 name: prioritize
-description: Propose a prioritized, readiness-aware order for an initiative's stories - or rank the initiative roadmap - reading from Jira (source of truth). Assesses the 4 Definition-of-Ready gates (design, AC/INVEST, dependencies, estimate + open questions), prints a ranked queue + gaps-to-start-dev, and is propose-only by default (writes only behind explicit per-item gates: an optional epic comment, and with --apply, transitions + size labels). Triggers on "prioritize", "what's ready", "rank this initiative", or "what should we pick next".
+description: "Propose a prioritized, readiness-aware order for an initiative's stories - or rank the initiative roadmap - reading from Jira (source of truth). Assesses the 4 Definition-of-Ready gates (design, AC/INVEST, dependencies, estimate + open questions), prints a ranked queue + gaps-to-start-dev, and is propose-only by default (writes only behind explicit per-item gates: an optional epic comment, and with --apply, transitions + size labels). Triggers on \"prioritize\", \"what's ready\", \"rank this initiative\", or \"what should we pick next\"."
 ---
 
 # /prioritize

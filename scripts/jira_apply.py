@@ -321,6 +321,10 @@ def preview(op, changeset, request):
     if kind == "comment":
         key = changeset.resolve(op.get("key"))
         body = op.get("body") or ""
+        if op.get("body_from"):
+            # A long comment is reviewed in the draft doc like a description.
+            source = op["body_from"]
+            body = fenced_block(source["doc"], source.get("block", 1))
         if not key or not body.strip():
             raise Refused("comment: 'key' and a non-empty 'body' are required")
         ensure_ascii(body, "comment.body")
@@ -339,7 +343,12 @@ def preview(op, changeset, request):
             {"endpoint": f"issue/{key}/assignee", "payload": {"name": assignee}},
         )
     key = changeset.resolve(op.get("key"))
-    fields = op.get("fields") or {}
+    fields = dict(op.get("fields") or {})
+    if op.get("description_from"):
+        # Same contract as create: the reviewed text lives in the draft doc,
+        # the changeset stays a payload (a rewritten description is long).
+        source = op["description_from"]
+        fields["description"] = fenced_block(source["doc"], source.get("block", 1))
     if not key or not fields:
         raise Refused("update: 'key' and a non-empty 'fields' object are required")
     ascii_walk(fields, "update.fields")

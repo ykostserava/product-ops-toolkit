@@ -39,7 +39,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from board_sync_delta import extract_snapshot  # noqa: E402
-from claude_cli import headless_env  # noqa: E402
+from claude_cli import headless_env, routing_report  # noqa: E402
 
 DEFAULT_FIXTURE = (
     Path(__file__).parent.parent / "tests" / "fixtures" / "board_sync_eval"
@@ -253,8 +253,17 @@ def run_agent(prompt, claude_cmd, timeout, model=None):
         env=env,
     )
     if proc.returncode != 0:
+        # The CLI prints an API/auth error on STDOUT, not stderr - on a
+        # Vertex-only setup with the routing stripped, stderr is empty and the
+        # old message was "claude exit 1: " with nothing after it. Name what was
+        # stripped (routing_report reads os.environ, the SOURCE - the filtered
+        # `env` would always say "none") and show the start of stdout, so the
+        # reader can tell "no provider" from "prompt blew up".
         raise RuntimeError(
-            f"claude exit {proc.returncode}: {proc.stderr.strip()[:300]}"
+            f"claude exit {proc.returncode} ({routing_report()}): "
+            f"stderr={proc.stderr.strip()[:600]!r} "
+            f"stdout={proc.stdout.strip()[:600]!r} "
+            f"(set CLAUDE_CLI_INHERIT_PROVIDER=1 to keep a Vertex/gateway routing)"
         )
     return proc.stdout
 

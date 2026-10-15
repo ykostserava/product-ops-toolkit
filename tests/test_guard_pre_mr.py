@@ -33,6 +33,23 @@ MARKER = HOOK.with_name("pre_mr_marker.py") if HOOK else None
 BLOCK, ALLOW = 2, 0
 
 
+def needs_git(cls):
+    """Skip without git - unless the environment says git MUST be there.
+
+    CI sets PRE_MR_REQUIRE_GIT=1: an image that lost git would otherwise turn
+    this whole file into skips and the job would be green having run nothing.
+    Raising at import makes `unittest discover` fail loudly instead.
+    """
+    if shutil.which("git") is not None:
+        return cls
+    if os.environ.get("PRE_MR_REQUIRE_GIT") == "1":
+        raise RuntimeError(
+            "PRE_MR_REQUIRE_GIT=1 but git is not on PATH - these tests would "
+            "all skip and the job would report green without running them"
+        )
+    return unittest.skip("git not on PATH")(cls)
+
+
 def git(repo, *args):
     env = dict(os.environ, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull)
     return subprocess.run(
@@ -40,7 +57,7 @@ def git(repo, *args):
     )
 
 
-@unittest.skipIf(shutil.which("git") is None, "git not on PATH")
+@needs_git
 @unittest.skipIf(HOOK is None, "hook not found in this layout")
 class GuardCase(unittest.TestCase):
     def setUp(self):
@@ -614,14 +631,13 @@ class GuardCase(unittest.TestCase):
         git(self.repo, "checkout", "-q", "master")
         self.assertEqual(self.verdict("git push origin master"), ALLOW)
 
-    @unittest.skipIf(MARKER is None or not MARKER.is_file(), "digest module absent")
-    def test_a_marker_covering_the_tree_lets_the_push_through(self):
+    def write_marker(self, repo=None):
         done = subprocess.run(
             [
                 sys.executable,
                 str(MARKER),
                 "--repo",
-                str(self.repo),
+                str(repo or self.repo),
                 "write",
                 "--base",
                 "master",
@@ -630,12 +646,297 @@ class GuardCase(unittest.TestCase):
             text=True,
         )
         self.assertEqual(done.returncode, 0, done.stderr)
+
+    @unittest.skipIf(MARKER is None or not MARKER.is_file(), "digest module absent")
+    def test_a_marker_covering_head_lets_the_push_through(self):
+        self.write_marker()
         self.assertEqual(self.verdict(self.push()), ALLOW)
+        # an uncommitted edit is not pushed and does not change the verdict...
         (self.repo / "a.txt").write_text("edited after the gate\n", encoding="utf-8")
+        self.assertEqual(self.verdict(self.push()), ALLOW)
+        # ...committing it does: that is content the gate never read
+        git(self.repo, "commit", "-qam", "after the gate")
         self.assertEqual(self.verdict(self.push()), BLOCK)
 
+    # --- a review (2026-09-28) ------------------------------------
 
-@unittest.skipIf(shutil.which("git") is None, "git not on PATH")
+    def test_shell_keywords_are_command_positions(self):
+        """`then` / `do` / `else` / `!` and friends are followed by a command.
+        `if git diff --quiet; then git push origin feat; fi` gave rc=0."""
+        for cmd in (
+            "if git diff --quiet; then git push origin feat/x; fi",
+            "if false; then true; else git push origin feat/x; fi",
+            "if false; then true; elif git push origin feat/x; then true; fi",
+            "while true; do git push origin feat/x; break; done",
+            "for r in origin; do git push $r feat/x; done",
+            "if git push origin feat/x; then echo ok; fi",
+            "until git push origin feat/x; do sleep 1; done",
+            "! git push origin feat/x",
+            "if true; then\n  git push origin feat/x\nfi",
+        ):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.verdict(cmd), BLOCK)
+
+    def test_timeout_nice_and_exec_are_wrappers(self):
+        for cmd in (
+            "timeout 60 git push origin feat/x",
+            "timeout -k 5 60 git push origin feat/x",
+            "timeout --signal=KILL 5m git push origin feat/x",
+            "nice git push origin feat/x",
+            "nice -n 10 git push origin feat/x",
+            "exec git push origin feat/x",
+            "nohup timeout 60 git push origin feat/x",
+            "sudo -- git push origin feat/x",
+            "env -- git push origin feat/x",
+            "sudo -u me -- git push origin feat/x",
+        ):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.verdict(cmd), BLOCK)
+
+    def test_leading_whitespace_is_still_a_command_position(self):
+        """Found while fixing the keyword class: the start-of-string
+        alternative allowed no whitespace, so an indented push was invisible."""
+        for cmd in ("  git push origin feat/x", "\tgit push origin feat/x"):
+            with self.subTest(cmd=repr(cmd)):
+                self.assertEqual(self.verdict(cmd), BLOCK)
+
+    def test_keywords_and_wrappers_do_not_turn_prose_into_a_push(self):
+        """The must-NOT-fire side of the two cases above."""
+        for cmd in (
+            'git commit -m "and then git push later"',
+            "echo then git push origin feat/x",
+            "echo timeout 60 git push origin feat/x",
+            "git log --grep 'do git push'",
+            "timeout 60 git status",
+            "if true; then git status; fi",
+        ):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.verdict(cmd), ALLOW)
+
+    def test_a_bypass_after_a_keyword_or_before_a_wrapper_is_honoured(self):
+        """The bypass must keep working in every shape the detector now sees,
+        or the only way out of a false block is to disable the hook."""
+        for cmd in (
+            "if true; then PRE_MR_BYPASS=1 git push origin feat/x; fi",
+            "PRE_MR_BYPASS=1 timeout 60 git push origin feat/x",
+            "export PRE_MR_BYPASS=1; if true; then git push origin feat/x; fi",
+        ):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.verdict(cmd), ALLOW)
+
+    def test_a_cd_or_export_behind_a_keyword_does_not_steer(self):
+        """Pre-MR pass 3: with keyword positions on the cd / export scanners
+        too, a branch that never runs relocated the judged repo or disarmed
+        the gate (rc=0, previous code rc=2). The keywords widen what counts
+        as a push, never what steers the verdict."""
+        master = self.other_repo("master")
+        for cmd in (
+            f"if [ -d zz_nope ]; then cd {master}; fi; git push origin feat/x",
+            f"while false; do cd {master}; done; git push origin feat/x",
+            'if [ -n "$ZZ_NOPE" ]; then export PRE_MR_BYPASS=1; fi; '
+            "git push origin feat/x",
+            f"if false; then export GIT_DIR={master}/.git; fi; git push origin feat/x",
+        ):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.verdict(cmd), BLOCK)
+
+    def test_a_relative_dash_c_is_resolved_from_the_cd_walk(self):
+        """`cd ../repo && git -C . push` from another repo gave rc=0: the
+        relative path was joined to the HOOK's cwd, not to where the shell
+        stands when git runs."""
+        feat = self.repo.as_posix()
+        for cmd in (
+            f"cd {feat} && git -C . push origin feat/x",
+            f"cd {feat}/.. && git -C {self.repo.name} push origin feat/x",
+            f"cd {feat} && git --git-dir=.git push origin feat/x",
+            f"cd {feat} && GIT_DIR=.git git push origin feat/x",
+            f"git -C {feat} --git-dir=.git push origin feat/x",
+        ):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.feat_from_master(cmd), BLOCK)
+        # and the other direction: standing in feat/x, steering to master
+        master = self.other_repo("master")
+        self.assertEqual(
+            self.verdict(f"cd {master} && git -C . push origin master"), ALLOW
+        )
+
+    def test_a_path_the_hook_cannot_see_is_judged_on_the_cwd(self):
+        """The fallback a review asked to remove - kept,
+        because both replacements were tried on 2026-10-05 and regressed.
+        ALLOW: `git worktree add <dir> b && git -C <dir> push` went through
+        from a feat/x cwd. BLOCK: master work stopped on paths only the shell
+        sees. So: an unreviewed cwd still blocks, a master cwd still passes."""
+        master = self.other_repo("master")
+        missing = (self.repo / "no-such-dir").as_posix()
+        for cmd in (
+            f"git -C {missing} push origin b",
+            f"git worktree add {missing} b && git -C {missing} push -u origin b",
+            f"git --git-dir={missing}/.git push origin b",
+            f"GIT_DIR={missing}/.git git push origin b",
+            f"export GIT_DIR={missing}/x.git; unset GIT_DIR; git push origin b",
+            f"cat > notes.txt <<'EOF'\nexport GIT_DIR={missing}/r.git\nEOF\n"
+            "git push origin b",
+            'git -c "core.sshCommand=ssh -C -i ~/.ssh/id" push origin b',
+            "git -C /tmp/zz_only_the_shell_sees_this push origin b",
+        ):
+            with self.subTest(cmd=cmd, cwd="feat/x"):
+                self.assertEqual(self.verdict(cmd), BLOCK)
+            with self.subTest(cmd=cmd, cwd="master"):
+                self.assertEqual(self.verdict(cmd, cwd=master), ALLOW)
+
+    def test_a_cd_that_cannot_be_followed_does_not_keep_the_previous_cd(self):
+        """Pre-MR pass 3: "stay at the last directory that exists" read
+        `cd <master> && cd - && git push` as a push from master, while the
+        shell is back on the unreviewed branch it started from (rc=0,
+        previous code rc=2) - and blocked the mirror case on master. A cd
+        that cannot be followed falls back to where the command started."""
+        master = self.other_repo("master")
+        feat = self.repo.as_posix()
+        missing = (self.repo / "no-such-dir").as_posix()
+        for back in ("cd -", "cd - >/dev/null", "cd ~-", "cd -P .", f"cd {missing}"):
+            with self.subTest(back=back, cwd="feat/x"):
+                cmd = f"cd {master} && {back} && git push origin feat/x"
+                self.assertEqual(self.verdict(cmd), BLOCK)
+            with self.subTest(back=back, cwd="master"):
+                cmd = f"cd {feat}; {back}; git push origin master"
+                self.assertEqual(self.verdict(cmd, cwd=master), ALLOW)
+        # and as the FIRST cd, on both branches
+        for cd in ("cd -", f"cd {missing}", f"(cd {missing}; ls)"):
+            with self.subTest(cd=cd):
+                self.assertEqual(
+                    self.verdict(f"{cd}; git push origin master", cwd=master), ALLOW
+                )
+                self.assertEqual(self.verdict(f"{cd}; " + self.push()), BLOCK)
+
+    def test_a_git_dir_that_is_a_gitfile_is_judged_on_its_worktree(self):
+        """`--git-dir=<linked worktree>/.git` names a FILE. Without mapping it
+        to the directory that holds it, the path "does not exist" and the
+        verdict comes from the cwd - master here, so rc=0 for feat/w."""
+        wt = Path(tempfile.mkdtemp()) / "wt"
+        self.addCleanup(shutil.rmtree, wt.parent, True)
+        done = git(self.repo, "worktree", "add", "-q", "-b", "feat/w", str(wt))
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertTrue((wt / ".git").is_file())
+        cmd = f"git --git-dir={wt.as_posix()}/.git push origin feat/w"
+        self.assertEqual(self.verdict(cmd, cwd=self.other_repo("master")), BLOCK)
+
+    def test_command_positions_do_not_respect_quoting_by_design(self):
+        """Skipping a match "inside a string" was tried on 2026-10-05 and
+        withdrawn: every one of these REALLY runs the push, and each got rc=0
+        because a regex paired an apostrophe in a heredoc body, a comment or
+        an escaped quote with a later quote and called the push prose."""
+        tick = chr(96)
+        for cmd in (
+            "git commit -F - <<'EOF'\nDon't break\nEOF\n"
+            "git push origin feat/x && echo 'pushed'",
+            "git commit -F - <<EOF\nDon't break\nEOF\n"
+            "git push origin feat/x 2>&1 | grep -v 'hint'",
+            "# it's the one\ngit push origin feat/x\necho 'done'",
+            'git add -A\ngit commit -m "fix it" # don\'t forget\n'
+            "git push origin feat/x\necho 'ok'",
+            "echo don\\'t; git push origin feat/x; echo it\\'s",
+            "echo $'it\\'s'; git push origin feat/x; echo '",
+            'echo "$( echo "x" ; git push origin feat/x )"',
+            'echo "' + tick + 'echo "x" ; git push origin feat/x' + tick + '"',
+            'echo "$(git push origin feat/x)"',
+            'x="$(cd . && git push origin feat/x)"',
+        ):
+            with self.subTest(cmd=cmd):
+                self.assertEqual(self.verdict(cmd), BLOCK)
+        for cmd in (
+            'Write-Host "$( "x" ; git push origin feat/x )"',
+            "echo " + tick + "'; git push origin feat/x; echo " + tick + "'",
+        ):
+            with self.subTest(cmd=cmd, shell="PowerShell"):
+                self.assertEqual(self.verdict(cmd, tool_name="PowerShell"), BLOCK)
+        # the accepted cost, pinned so it is a decision and not an accident: a
+        # message LINE that starts like a push blocks the commit (bypass it)
+        prose = 'git commit -m "subject\n\nthen git push the branch"'
+        self.assertEqual(self.verdict(prose), BLOCK)
+        # ...and only the EXPORT form reaches a match inside a string: a prefix
+        # covers its own command, and the false match is not that command.
+        self.assertEqual(self.verdict("export PRE_MR_BYPASS=1; " + prose), ALLOW)
+        self.assertEqual(self.verdict("PRE_MR_BYPASS=1 " + prose), BLOCK)
+
+    def test_stacked_wrapper_options_do_not_hang(self):
+        """Pre-MR pass 2026-10-05: three wrappers with six `--a` each took
+        46 s on a 93-character input - the repetition caps did not bound the
+        backtracking, the option grammar was ambiguous."""
+        import time as _time
+
+        for word in ("env", "timeout", "sudo"):
+            cmd = (word + " --a" * 8 + " ") * 3 + "git pushx"
+            with self.subTest(word=word):
+                started = _time.monotonic()
+                self.assertEqual(self.verdict(cmd), ALLOW)
+                self.assertLess(_time.monotonic() - started, 5.0)
+
+    @unittest.skipIf(MARKER is None or not MARKER.is_file(), "digest module absent")
+    def test_a_git_dir_spelling_with_a_valid_marker_is_allowed(self):
+        """`--git-dir=<repo>/.git` made the judged path the .git directory;
+        the old digest needed a work tree there, failed, and a push with a
+        VALID marker was blocked. Both verdicts are pinned: no marker blocks,
+        a marker allows, a commit after it blocks again."""
+        feat = self.repo.as_posix()
+        spellings = (
+            f"git --git-dir={feat}/.git push origin feat/x",
+            f"GIT_DIR={feat}/.git git push origin feat/x",
+            f"git --git-dir={feat}/.git --work-tree={feat} push origin feat/x",
+        )
+        for cmd in spellings:
+            with self.subTest(cmd=cmd, marker="none"):
+                self.assertEqual(self.feat_from_master(cmd), BLOCK)
+        self.write_marker()
+        for cmd in spellings:
+            with self.subTest(cmd=cmd, marker="valid"):
+                self.assertEqual(self.feat_from_master(cmd), ALLOW)
+        (self.repo / "a.txt").write_text("after the gate\n", encoding="utf-8")
+        git(self.repo, "commit", "-qam", "after")
+        for cmd in spellings:
+            with self.subTest(cmd=cmd, marker="stale"):
+                self.assertEqual(self.feat_from_master(cmd), BLOCK)
+
+    @unittest.skipIf(MARKER is None or not MARKER.is_file(), "digest module absent")
+    def test_a_wrong_typed_marker_field_blocks(self):
+        """`{"digest": 1}`: TypeError in check(), caught by the hook's
+        catch-all, read as ALLOW - exit 0 with this marker, exit 2 with none."""
+        self.write_marker()
+        path = self.repo / ".git" / "pre-mr-ok"
+        good = json.loads(path.read_text(encoding="utf-8"))
+        for field, value in (("digest", 1), ("tree", 1), ("tree", ["x"]), ("head", 0)):
+            with self.subTest(field=field, value=value):
+                broken = json.dumps(dict(good, **{field: value}))
+                path.write_text(broken, encoding="utf-8")
+                self.assertEqual(self.verdict(self.push()), BLOCK)
+
+
+class SkillWiring(unittest.TestCase):
+    """The settings block the skill tells people to paste must reach the hook
+    on both shells: with `Bash` alone the PowerShell handling never runs."""
+
+    def test_the_documented_matcher_covers_both_shells(self):
+        skill = next(
+            (
+                p
+                for p in (
+                    ROOT / ".claude" / "skills" / "pre-mr" / "SKILL.md",
+                    ROOT / "skills" / "pre-mr" / "SKILL.md",
+                )
+                if p.is_file()
+            ),
+            None,
+        )
+        if skill is None:
+            self.skipTest("skill not found in this layout")
+        text = skill.read_text(encoding="utf-8")
+        start = text.index("```json")
+        block = text[start + len("```json") : text.index("```", start + 7)]
+        wiring = json.loads(block)["hooks"]["PreToolUse"][0]
+        self.assertEqual(set(wiring["matcher"].split("|")), {"Bash", "PowerShell"})
+        self.assertIn("guard_pre_mr.py", wiring["hooks"][0]["command"])
+
+
+@needs_git
 @unittest.skipIf(HOOK is None, "hook not found in this layout")
 class DocsOnlyExemption(GuardCase):
     """Docs-only exemption: a branch whose whole diff against its base is

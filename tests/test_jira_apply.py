@@ -489,3 +489,39 @@ def test_propose_only_still_allows_a_dry_run(tmp_path, monkeypatch):
     monkeypatch.setenv("JIRA_PROPOSE_ONLY", "1")
     cs = changeset(tmp_path, [create_op()])
     assert wja.run(cs, FakeJira(), apply_changes=False)
+
+
+def test_comment_body_comes_from_a_doc_block(tmp_path):
+    doc = tmp_path / "draft.md"
+    doc.write_text("```\n[~someone] reviewed, thanks\n```\n", encoding="utf-8")
+    cs = changeset(
+        tmp_path,
+        [
+            {
+                "op": "comment",
+                "key": "PROJ-1",
+                "body_from": {"doc": str(doc), "block": 1},
+            }
+        ],
+    )
+    label, request = wja.preview(cs.ops[0], cs, lambda *_: {})
+    assert "comment on PROJ-1" in label
+    assert request["payload"]["body"] == "[~someone] reviewed, thanks"
+
+
+def test_update_description_comes_from_a_doc_block(tmp_path):
+    doc = tmp_path / "draft.md"
+    doc.write_text("# d\n\n```\nh2. Rewritten\n\ntext\n```\n", encoding="utf-8")
+    cs = changeset(
+        tmp_path,
+        [
+            {
+                "op": "update",
+                "key": "PROJ-1",
+                "description_from": {"doc": str(doc), "block": 1},
+            }
+        ],
+    )
+    label, request = wja.preview(cs.ops[0], cs, lambda *_: {})
+    assert "description" in label
+    assert request["payload"]["fields"]["description"] == "h2. Rewritten\n\ntext"

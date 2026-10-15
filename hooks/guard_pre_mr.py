@@ -2,16 +2,16 @@
 
 Team ruling (the pre-mr rule): every push to a branch that goes to team
 review must be preceded by a /pre-mr run. The skill's final step writes a
-JSON marker at <git-dir>/pre-mr-ok holding a digest of the reviewed content;
+JSON marker at <git-dir>/pre-mr-ok holding the tree id of the reviewed HEAD;
 this hook blocks `git push` on non-master/main branches when that marker is missing or
-does not cover the current tree.
+does not cover the current HEAD.
 
-Coverage is by CONTENT, not by HEAD: an amend that only rewords a commit keeps
-the marker, while applying review findings invalidates it. That is the case
+Coverage is by CONTENT (the tree of HEAD), not by commit id: an amend that only
+rewords a commit keeps the marker, while committing review findings invalidates it. That is the case
 this hook was widened for in an earlier review - findings were applied after the
 adversarial pass, the marker was rewritten mechanically because HEAD had
 moved, and a regression introduced by the fixes reached the branch with the
-gate reporting green. The digest lives in pre_mr_marker.py, installed next to
+gate reporting green. The comparison lives in pre_mr_marker.py, installed next to
 this hook; if it is missing, fall back to the old HEAD comparison rather than
 blocking (fail-open).
 
@@ -30,13 +30,22 @@ Fail-open by design: any internal error -> exit 0 (never break a push because
 the hook itself is broken). Exit 2 = block, stderr shown to the model.
 
 Detection is best-effort text matching. `git` must sit at a command position
-(start, or after ; & | ( { newline or a backtick, optional VAR=x prefixes) and
-only git options may appear between `git` and `push`, so `echo 'git push'`
-does not trigger. The `{` and backtick positions were added for PowerShell's
-`if ($?) { ... }` and for backtick continuations, and they do NOT respect
-quoting: a string that merely CONTAINS "{ git push }" or a backtick code span
-around it will block. So can a heredoc that documents a push. That is the
-cheap error - use PRE_MR_BYPASS=1 there.
+(start, or after ; & | ( { newline or a backtick; then optional shell keywords
+`then do else elif if while until !`, optional VAR=x prefixes and wrapper
+words) and only git options may appear between `git` and `push`, so
+`echo 'git push'` does not trigger. The keywords and the `timeout` / `nice` /
+`exec` wrappers came from a review: `if ...; then git push;
+fi` and `timeout 60 git push` both walked past.
+
+Command positions do NOT respect quoting: a string that merely CONTAINS
+"{ git push }", a commit-message line that starts with `then git push`, or a
+heredoc that documents a push will block. That is the cheap error - put
+`export PRE_MR_BYPASS=1;` in front (the prefix form covers only its own
+command, and the false match is not that command). Skipping matches "inside a string" was tried on
+2026-10-05 and withdrawn the same day: pairing quotes in shell text is not
+decidable by a regex (an apostrophe in a heredoc body or in a `#` comment, an
+escaped quote, a quote nested in `$( )`), and every mis-pairing turned a REAL
+push into an unseen one. A gate may block prose; it may not skip a push.
 
 Known costs, accepted (seven review rounds): an `export GIT_DIR=`
 earlier in the line is judged ADDITIVELY (the exported repo and the cwd walk
@@ -69,13 +78,30 @@ TOKEN = r"\"[^\"]*\"|'[^']*'|(?:\\.|[^\s;&|(){}<>`\\])+"
 # and `\S*` made it steer the verdict (round 5, B4).
 ENV_PREFIX = r"(?:[A-Za-z_]\w*=(?:" + TOKEN + r")?\s+)*"
 SHELL = "Bash"  # set from the payload's tool_name in main()
+# Where a command can start: the line start or a delimiter, then whitespace,
+# then any shell keywords that are themselves followed by a command. Leading
+# whitespace at the very start counts - `  git push` is a push (it was not
+# seen before 2026-10-05: the `^` alternative had no `\s*`).
+POSITION = (
+    r"(?:(?:^|[;&|({`\n]|\$\()\s*)"
+    r"(?:(?:then|do|else|elif|if|while|until|!)\s+){0,4}"
+)
 WRAPPER = (
     # `sudo -u me git`, `env FOO=1 git`, `nohup git`: a wrapper word, its
     # own options, then env prefixes again. Repetitions are capped: the
     # option loop backtracked exponentially on `env -o0 ... -o32 git-thing`
-    # (6.9 s at n=32 - a hanging hook is worse than either verdict).
-    r"(?:(?:sudo|env|time|nohup|command|winpty)"
-    r"(?:\s+-{1,2}[\w-]+(?:[= ]\S+)?){0,8}\s+" + ENV_PREFIX + r"){0,3}"
+    # (6.9 s at n=32 - a hanging hook is worse than either verdict). The cap
+    # alone did not hold: three wrappers with six `--a` each took 46 s, because
+    # `--a` parsed both as `-`+`-a` and as `--`+`a` and an option's value could
+    # swallow the next option. The option is now unambiguous: the dashes are
+    # followed by a word character, and a space-separated value never starts
+    # with a dash (`nice -n -5` still matches: `-5` reads as the next
+    # option). A bare `--` (`sudo -- git`) ends the options.
+    # `timeout 60 git`, `nice -n 5 git`, `exec git`: the same shape, plus one
+    # positional duration for timeout (`60`, `5m`, `1.5h`).
+    r"(?:(?:sudo|env|time|nohup|command|winpty|timeout|nice|exec)"
+    r"(?:\s+-{1,2}(?![-\s])\w[\w-]*(?:=\S+| (?!-)\S+)?){0,8}"
+    r"(?:\s+--(?=\s))?(?:\s+\d[\w.]*)?\s+" + ENV_PREFIX + r"){0,3}"
 )
 GIT_BIN = (
     # Spellings that still run git: a bare `git`, `git.exe` (this machine's
@@ -86,7 +112,7 @@ GIT_BIN = (
     r"|(?:[\w.~:\\/-]*[\\/])?git(?:\.exe)?)"
 )
 PUSH_SEG = re.compile(
-    r"(?:^|[;&|({`\n]\s*|\$\(\s*)"
+    POSITION
     + ENV_PREFIX
     + WRAPPER
     + GIT_BIN
@@ -124,6 +150,10 @@ def blank_quotes(text):
 # The bypass must sit at a command position, and an env-prefix form applies
 # to ITS command only (`PRE_MR_BYPASS=1 git push a; git push b` vouches for
 # nothing behind the `;`), while `export` persists for the rest of the line.
+# No keyword positions here (see CD_RX): `if ...; then export
+# PRE_MR_BYPASS=1; fi` exports only when the branch runs. The PREFIX form
+# below may sit behind a keyword - it belongs to the push command itself and
+# runs exactly when the push does.
 EXPORT_BYPASS_RX = re.compile(
     r"(?:^|[;&|({`\n])\s*export\s+PRE_MR_BYPASS=1(?=[\s;&|)}]|$)"
 )
@@ -146,9 +176,7 @@ PS_BYPASS_RX = re.compile(
 # Read from the ORIGINAL right after the `=`: whitespace is identical in both
 # texts (only quotes are blanked), so the value regex owns the `\s*`.
 PS_VALUE_RX = re.compile(r"\s*['\"]?1['\"]?(?=[\s;&|)}]|$)")
-PREFIX_BYPASS_RX = re.compile(
-    r"(?:^|[;&|({`\n])\s*" + ENV_PREFIX + r"PRE_MR_BYPASS=1(?=\s)"
-)
+PREFIX_BYPASS_RX = re.compile(POSITION + ENV_PREFIX + r"PRE_MR_BYPASS=1(?=\s)")
 
 
 def bypassed(cmd, seg):
@@ -211,6 +239,11 @@ def expand_vars(raw, prefix):
 # A cd/pushd argument ends at whitespace OR a shell delimiter: `\S+` used to
 # swallow the `;` of `cd repo; ls; git push` and the path never resolved.
 CD_ARG = re.compile(TOKEN)
+# NOT built on POSITION: a `cd` or an `export` behind `then` / `do` / `else`
+# runs only if its branch does, and the text cannot tell. Seeing it there let
+# `if [ -d nope ]; then cd <master>; fi; git ...` be judged on master (pre-MR
+# pass 3, 2026-10-05). The keywords widen what counts as a PUSH, never what
+# steers the verdict.
 CD_RX = re.compile(r"(?:^|[;&|({`\n]\s*)(?:cd|pushd)(?=[ \t])")
 EXPORT_GITDIR_RX = re.compile(r"(?:^|[;&|({`\n])\s*export\s+GIT_DIR=")
 
@@ -225,32 +258,13 @@ def unescape(token):
 def repo_dir_for(cmd, seg):
     base = os.getcwd()
     prefix = cmd[: seg.start()]
-    # Anything that names the repo explicitly wins over the cd walk:
-    # -C <dir>, --git-dir <dir> / --git-dir=<dir>, and a GIT_DIR= env prefix
-    # (round 3, S1: all three steered the push without being seen).
     opts = seg.group("opts")
     head = seg.group(0)[: seg.end("opts") - seg.start()]  # up to the verb
     blank = blank_quotes(prefix)
-    m_c = re.search(r"-C\s+(" + TOKEN + ")", opts)
-    m_gd = re.search(r"--git-dir(?:=|\s+)(" + TOKEN + ")", opts)
-    m_env = re.search(r"(?:^|[\s;&|({`])GIT_DIR=(" + TOKEN + ")", head)
-    # `export GIT_DIR=<dir>; git push` from an earlier statement: located on
-    # the blanked prefix, value read from the original (round 5, B3). The
-    # LAST export wins, like the shell.
-    # git's own precedence: --git-dir, then the GIT_DIR environment prefix,
-    # then -C, which only chdirs. The reverse order let `-C <master>
-    # --git-dir=<review>` be judged on master (round 4); GIT_DIR after the
-    # verb (a trailing comment) steered too, hence `head`.
-    for m_named, unresolved in (
-        (m_gd, None),  # git fatals on a bad --git-dir: nothing is pushed
-        (m_env, None),
-        (m_c, base),  # `-C ""` is a no-op for git: the cwd is what pushes
-    ):
-        if m_named:
-            expanded = expand_vars(m_named.group(m_named.re.groups), prefix)
-            if expanded is None:
-                return None if unresolved is None else [unresolved]
-            return [norm_path(expanded, base)]
+    # The cd walk comes FIRST: it is where the shell stands when git runs, and
+    # a relative -C / --git-dir is relative to THAT, not to the hook's own cwd
+    # (a review: `cd ../repo && git -C . push` was judged on the repo the
+    # hook stood in).
     cur = base
     # Locate `cd` on the quote-blanked text (a cd inside a string is prose)
     # and read its argument from the ORIGINAL at the same offset - skipping
@@ -281,7 +295,39 @@ def repo_dir_for(cmd, seg):
             # in. Judging the current directory is right; failing open was a
             # free bypass (review round 2, finding 4).
             continue
+        # Adopted even when the directory does not exist: judge_repo then
+        # falls back to the hook's own cwd. Two other treatments were tried on
+        # 2026-10-05 and withdrawn - "stay at the last directory that exists"
+        # read `cd <master> && cd - && git ...` as a push from master (the
+        # shell is back where it started), and "block" stopped ordinary master
+        # work (`cd -`, a git-bash `/tmp`).
         cur = norm_path(expanded, cur)
+    # Anything that names the repo explicitly wins over the cd walk:
+    # -C <dir>, --git-dir <dir> / --git-dir=<dir>, and a GIT_DIR= env prefix
+    # (round 3, S1: all three steered the push without being seen).
+    m_c = re.search(r"-C\s+(" + TOKEN + ")", opts)
+    m_gd = re.search(r"--git-dir(?:=|\s+)(" + TOKEN + ")", opts)
+    m_env = re.search(r"(?:^|[\s;&|({`])GIT_DIR=(" + TOKEN + ")", head)
+    # git's own precedence: --git-dir, then the GIT_DIR environment prefix,
+    # then -C, which only chdirs - so a relative --git-dir / GIT_DIR is read
+    # from the -C directory. The reverse order let `-C <master>
+    # --git-dir=<review>` be judged on master (round 4); GIT_DIR after the
+    # verb (a trailing comment) steered too, hence `head`.
+    workdir = cur
+    if m_c:
+        expanded = expand_vars(m_c.group(1), prefix)
+        # `-C ""` (an unresolved variable) is a no-op for git: the shell's
+        # directory is what pushes.
+        if expanded is not None and expanded.strip("\"'"):
+            workdir = norm_path(expanded, cur)
+    for m_named in (m_gd, m_env):
+        if m_named:
+            expanded = expand_vars(m_named.group(1), prefix)
+            if expanded is None:
+                return None  # git fatals on a bad --git-dir: nothing is pushed
+            return [norm_path(expanded, workdir)]
+    if m_c:
+        return [workdir]
     repos = [cur]
     # `export GIT_DIR=<dir>` in an earlier statement (Bash only - PowerShell
     # has no `export`). Whether it applies to the push is not decidable from
@@ -437,7 +483,20 @@ def judge(cmd, seg):
 
 
 def judge_repo(repo):
+    # `--git-dir=<worktree>/.git` may name a gitfile: judge the directory that
+    # holds it.
+    if os.path.isfile(repo):
+        repo = os.path.dirname(repo)
     if not os.path.isdir(repo):
+        # A path the hook cannot see is judged on the hook's own cwd. The
+        # a review asked for this fallback to go; both
+        # replacements were tried on 2026-10-05 and each was worse. ALLOW let
+        # `git worktree add <dir> b && git -C <dir> ...` through from any cwd
+        # (the directory does not exist YET). BLOCK stopped master work on
+        # paths only the shell can see (a git-bash `/tmp/x`, an `export
+        # GIT_DIR=` inside a heredoc, a `-C` inside a quoted `-c` value). The
+        # cwd is where the command starts, and an unreviewed branch there
+        # still blocks.
         repo = os.getcwd()
     rc, branch = git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     if rc != 0 or branch in ("master", "main", "HEAD"):
